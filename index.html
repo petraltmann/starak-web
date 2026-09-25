@@ -160,15 +160,12 @@
     <button class="refresh" id="refreshBtn" title="Načíst znovu">↻</button>
   </div>
   <nav class="tabs" role="tablist" aria-label="Sekce">
-    <button class="tab" role="tab" data-tab="seznam" aria-selected="true">
-      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-      <span class="lbl">Seznam</span></button>
+    <button class="tab" role="tab" data-tab="rozuctovani" aria-selected="true">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>
+      <span class="lbl">Rozúčtování</span></button>
     <button class="tab" role="tab" data-tab="okaly" aria-selected="false">
       <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11 12 4l9 7M5 10v10h14V10"/></svg>
       <span class="lbl">Okály</span></button>
-    <button class="tab" role="tab" data-tab="rozuctovani" aria-selected="false">
-      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>
-      <span class="lbl">Rozúčtování</span></button>
     <button class="tab" role="tab" data-tab="pivo" aria-selected="false">
       <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h9v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8Z"/><path d="M15 10h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2"/><path d="M6.5 8a2.5 2.5 0 1 1 3-3 2.2 2.2 0 0 1 3 .3"/></svg>
       <span class="lbl">Pivo</span></button>
@@ -176,9 +173,8 @@
 </header>
 
 <main>
-  <section id="panel-seznam" role="tabpanel"></section>
+  <section id="panel-rozuctovani" role="tabpanel"></section>
   <section id="panel-okaly" role="tabpanel" hidden></section>
-  <section id="panel-rozuctovani" role="tabpanel" hidden></section>
   <section id="panel-pivo" role="tabpanel" hidden></section>
 </main>
 
@@ -329,26 +325,6 @@ function load(){
 /* ---- Vykreslení ---- */
 function esc(s){ return String(s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];}); }
 
-function renderSeznam(){
-  var el=document.getElementById("panel-seznam"); el.innerHTML="";
-  OKALY.forEach(function(ok){
-    var lidi=guests.filter(function(g){return g.okal===ok;})
-      .sort(function(a,b){return (a.pokoj+a.jmeno).localeCompare(b.pokoj+b.jmeno,"cs");});
-    if(!lidi.length) return;
-    var h=document.createElement("div"); h.className="section-title";
-    h.textContent=OKAL_NAZEV[ok]||("Okál "+ok); el.appendChild(h);
-    lidi.forEach(function(g){
-      var deti=g.deti>0?(" · "+pluralDeti(g.deti)):"";
-      var card=document.createElement("div"); card.className="card guest row";
-      card.innerHTML=
-        '<div><div class="nm">'+esc(g.jmeno)+'</div>'+
-        '<div class="meta">Pokoj '+esc(g.pokoj)+deti+' · '+noci(g)+' nocí · '+d2(g.prijezd)+'–'+d2(g.odjezd)+'</div></div>'+
-        '<div class="price tnum">'+kc(cenaPolopenze(g)+pivoOsoby(g))+'</div>';
-      el.appendChild(card);
-    });
-  });
-}
-
 function roomInfo(ok, pokoj){
   var lidi=guests.filter(function(g){return g.okal===ok && g.pokoj===pokoj;})
     .sort(function(a,b){return a.jmeno.localeCompare(b.jmeno,"cs");});
@@ -461,14 +437,14 @@ function trimNum(n){ return (Math.round(n*100)/100).toString(); }
 function podily(n){ var k=Math.round(n); return k+" "+(k===1?"podíl":(k>=2&&k<=4?"podíly":"podílů")); }
 function pluralDeti(n){ var k=Math.round(n); return k+" "+(k===1?"dítě":(k>=2&&k<=4?"děti":"dětí")); }
 
-function renderAll(){ renderSeznam(); renderOkaly(); renderRozuctovani(); renderPivo(); }
+function renderAll(){ renderRozuctovani(); renderOkaly(); renderPivo(); }
 
 /* ---- Přepínání záložek ---- */
 function showTab(name){
   document.querySelectorAll(".tab").forEach(function(t){
     t.setAttribute("aria-selected", t.dataset.tab===name ? "true":"false");
   });
-  ["seznam","okaly","rozuctovani","pivo"].forEach(function(n){
+  ["rozuctovani","okaly","pivo"].forEach(function(n){
     document.getElementById("panel-"+n).hidden = (n!==name);
   });
   try{ if(location.hash.slice(1)!==name) history.replaceState(null,"","#"+name); }catch(e){}
@@ -480,6 +456,6 @@ document.querySelectorAll(".tab").forEach(function(t){
 document.getElementById("refreshBtn").addEventListener("click", load);
 
 var initial=(location.hash||"").slice(1);
-showTab(["seznam","okaly","rozuctovani","pivo"].indexOf(initial)>=0 ? initial : "seznam");
+showTab(["rozuctovani","okaly","pivo"].indexOf(initial)>=0 ? initial : "rozuctovani");
 load();
 </script>
