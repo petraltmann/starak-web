@@ -328,22 +328,30 @@ function parseCz(cell){
   return null;
 }
 function fromGviz(resp){
-  var rows = resp.table.rows, out=[];
-  for(var i=0;i<rows.length;i++){
-    var c=rows[i].c||[];
-    var jm = c[0]&&c[0].v!=null ? String(c[0].v).trim() : "";
+  // Sloupce hledáme podle názvu v hlavičce (odolné vůči přeházení/přidání sloupců).
+  function norm(s){ return (s||"").toString().trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,""); }
+  var cols=resp.table.cols||[], idx={};
+  cols.forEach(function(col,i){ var n=norm(col.label); if(!(n in idx)) idx[n]=i; });
+  function get(c,name){ var i=idx[name]; return (i==null)?null:c[i]; }
+  function txt(cell){ return cell&&cell.v!=null?String(cell.v).trim():""; }
+
+  var rows = resp.table.rows||[], out=[];
+  for(var r=0;r<rows.length;r++){
+    var c=rows[r].c||[];
+    var jm=txt(get(c,"jmeno"));
     if(!jm) continue;
-    var prij=parseCz(c[4]), odj=parseCz(c[6]);
+    var prij=parseCz(get(c,"prijezd")), odj=parseCz(get(c,"odjezd"));
     if(!prij||!odj) continue; // vynechá souhrnové řádky
+    var deC=get(c,"deti"), koC=get(c,"konz"), veC=get(c,"prvni vecere");
     out.push({
       jmeno: jm,
-      okal: c[1]&&c[1].v?String(c[1].v).trim().toUpperCase():"A",
-      pokoj: c[2]&&c[2].v?String(c[2].v).trim().toUpperCase():"A",
-      deti: c[3]&&c[3].v?Math.round(c[3].v):0,
+      okal: txt(get(c,"okal")).toUpperCase()||"A",
+      pokoj: txt(get(c,"pokoj")).toUpperCase()||"A",
+      deti: deC&&deC.v?Math.round(deC.v):0,
       prijezd: prij, odjezd: odj,
-      vecere: !!(c[5]&&c[5].v),
-      konz: c[9]&&c[9].v?+c[9].v:0,
-      rodina: c[11]&&c[11].v?String(c[11].v).trim():""
+      vecere: !!(veC&&veC.v),
+      konz: koC&&koC.v?+koC.v:0,
+      rodina: txt(get(c,"rodina"))
     });
   }
   return out;
