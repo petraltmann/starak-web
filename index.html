@@ -143,6 +143,9 @@
     background:var(--raise);color:var(--muted);cursor:pointer;padding:0}
   .qr-btn:active{transform:scale(.94)}
   .qr-btn svg{width:18px;height:18px}
+  .paid-badge{flex:0 0 auto;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;
+    color:var(--ok);background:color-mix(in srgb,var(--ok) 14%, transparent);
+    border:1px solid color-mix(in srgb,var(--ok) 32%, var(--line));border-radius:20px;padding:5px 10px;white-space:nowrap}
   /* QR modal */
   .qr-modal{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
     padding:20px;background:rgba(0,0,0,.55)}
@@ -301,15 +304,20 @@ function spd(am, label){
 }
 function ibanPretty(){ return IBAN.replace(/(.{4})/g,"$1 ").trim(); }
 var QR_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M20 14v.01M14 20v.01M20 20v.01M17 17v.01M20 17h.01M17 20h.01"/></svg>';
+function payCtrl(paid, am, label){
+  return paid ? '<span class="paid-badge">✓ Zaplaceno</span>'
+    : '<button class="qr-btn" data-am="'+am+'" data-label="'+esc(label)+'" aria-label="QR platba">'+QR_SVG+'</button>';
+}
 
 function rodiny(){
   var map={}, order=[];
   guests.forEach(function(g){
     if(!(g.rodina&&g.rodina.trim())) return; // bez vyplněné rodiny se nezobrazuje
     var label=g.rodina.trim(), key="R:"+label;
-    if(!map[key]){ map[key]={label:label, clenove:[], cena:0}; order.push(key); }
+    if(!map[key]){ map[key]={label:label, clenove:[], cena:0, zaplaceno:true}; order.push(key); }
     map[key].clenove.push(g.jmeno);
     map[key].cena+=cenaPolopenze(g);
+    map[key].zaplaceno = map[key].zaplaceno && !!g.zapPolopenze;
   });
   return order.map(function(k){return map[k];})
     .sort(function(a,b){ return a.label.localeCompare(b.label,"cs"); });
@@ -330,10 +338,11 @@ function parseCz(cell){
 function fromGviz(resp){
   // Sloupce hledáme podle názvu v hlavičce (odolné vůči přeházení/přidání sloupců).
   function norm(s){ return (s||"").toString().trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,""); }
-  var cols=resp.table.cols||[], idx={};
-  cols.forEach(function(col,i){ var n=norm(col.label); if(!(n in idx)) idx[n]=i; });
+  var cols=resp.table.cols||[], idx={}, zapCols=[];
+  cols.forEach(function(col,i){ var n=norm(col.label); if(!(n in idx)) idx[n]=i; if(n==="zap.") zapCols.push(i); });
   function get(c,name){ var i=idx[name]; return (i==null)?null:c[i]; }
   function txt(cell){ return cell&&cell.v!=null?String(cell.v).trim():""; }
+  function boolAt(c,i){ var cell=(i==null)?null:c[i]; return !!(cell&&cell.v); }
 
   var rows = resp.table.rows||[], out=[];
   for(var r=0;r<rows.length;r++){
@@ -351,7 +360,9 @@ function fromGviz(resp){
       prijezd: prij, odjezd: odj,
       vecere: !!(veC&&veC.v),
       konz: koC&&koC.v?+koC.v:0,
-      rodina: txt(get(c,"rodina"))
+      rodina: txt(get(c,"rodina")),
+      zapPolopenze: zapCols.length>0 ? boolAt(c, zapCols[0]) : false,
+      zapPivo: zapCols.length>1 ? boolAt(c, zapCols[1]) : false
     });
   }
   return out;
@@ -360,7 +371,8 @@ function fromSnap(){
   return SNAP.map(function(r){
     return {jmeno:r[0], okal:r[1], pokoj:r[2], deti:r[3],
       prijezd:new Date(r[4]+"T00:00:00"), vecere:!!r[5],
-      odjezd:new Date(r[6]+"T00:00:00"), konz:r[7], rodina:r[8]||""};
+      odjezd:new Date(r[6]+"T00:00:00"), konz:r[7], rodina:r[8]||"",
+      zapPolopenze:false, zapPivo:false};
   });
 }
 function setStatus(kind, text){
@@ -480,8 +492,7 @@ function renderRozuctovani(){
     var c=document.createElement("div"); c.className="card pay row";
     c.innerHTML='<div><div class="nm">'+esc(r.label)+'</div>'+
       '<div class="sub">'+esc(r.clenove.join(", "))+'</div></div>'+
-      '<div class="pay-right"><div class="amt tnum">'+kc(r.cena)+'</div>'+
-      '<button class="qr-btn" data-am="'+r.cena+'" data-label="'+esc(r.label)+'" aria-label="QR platba">'+QR_SVG+'</button></div>';
+      '<div class="pay-right"><div class="amt tnum">'+kc(r.cena)+'</div>'+payCtrl(r.zaplaceno, r.cena, r.label)+'</div>';
     el.appendChild(c);
   });
 
@@ -493,8 +504,7 @@ function renderRozuctovani(){
     var pol=cenaPolopenze(g);
     c.innerHTML='<div><div class="nm">'+esc(g.jmeno)+'</div>'+
       '<div class="sub">Pokoj '+esc(g.pokoj)+' · '+noci(g)+' nocí</div></div>'+
-      '<div class="pay-right"><div class="amt tnum">'+kc(pol)+'</div>'+
-      '<button class="qr-btn" data-am="'+pol+'" data-label="'+esc(g.jmeno)+'" aria-label="QR platba">'+QR_SVG+'</button></div>';
+      '<div class="pay-right"><div class="amt tnum">'+kc(pol)+'</div>'+payCtrl(g.zapPolopenze, pol, g.jmeno)+'</div>';
     el.appendChild(c);
   });
 }
@@ -521,8 +531,7 @@ function renderPivo(){
     var pv=pivoOsoby(g);
     c.innerHTML='<div><div class="nm">'+esc(g.jmeno)+'</div>'+
       '<div class="sub">'+podily(g.konz)+'</div></div>'+
-      '<div class="pay-right"><div class="amt tnum">'+kc(pv)+'</div>'+
-      '<button class="qr-btn" data-am="'+pv+'" data-label="'+esc(g.jmeno)+' (pivo)" aria-label="QR platba">'+QR_SVG+'</button></div>';
+      '<div class="pay-right"><div class="amt tnum">'+kc(pv)+'</div>'+payCtrl(g.zapPivo, pv, g.jmeno+' (pivo)')+'</div>';
     el.appendChild(c);
   });
 }
