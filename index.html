@@ -338,7 +338,7 @@ function renderSeznam(){
     var h=document.createElement("div"); h.className="section-title";
     h.textContent=OKAL_NAZEV[ok]||("Okál "+ok); el.appendChild(h);
     lidi.forEach(function(g){
-      var deti=g.deti>0?(" · "+g.deti+" dětí"):"";
+      var deti=g.deti>0?(" · "+pluralDeti(g.deti)):"";
       var card=document.createElement("div"); card.className="card guest row";
       card.innerHTML=
         '<div><div class="nm">'+esc(g.jmeno)+'</div>'+
@@ -377,7 +377,7 @@ function renderOkaly(){
           room.className="room"+(over?" over":"")+(free?" empty-room":"");
           var who = free ? '<div class="free">volný</div>'
             : info.lidi.map(function(g){return '<div class="who">'+esc(g.jmeno)+'</div>';}).join("")
-              + (info.deti>0?'<div class="kids">+ '+info.deti+' dětí</div>':"");
+              + (info.deti>0?'<div class="kids">+ '+pluralDeti(info.deti)+'</div>':"");
           room.innerHTML='<div class="rh"><span class="rl">'+slot+'</span>'+
             '<span class="oc tnum">'+info.osob+'/'+info.kap+'</span></div>'+who;
           grid.appendChild(room);
@@ -409,7 +409,7 @@ function renderRozuctovani(){
     '<hr class="hr">'+
     kvCap(OKAL_NAZEV.A, A)+kvCap(OKAL_NAZEV.B, B)+
     '<hr class="hr">'+
-    kv("První večeře (catering)", pvD+" dosp. + "+pvDeti+" dětí")+
+    kv("První večeře (catering)", pvD+" dosp. + "+pluralDeti(pvDeti))+
     '<hr class="hr">'+
     '<div class="total"><span class="k">Celkem polopenze</span><span class="v tnum">'+kc(cenaCelk)+'</span></div>';
   el.appendChild(sum);
@@ -455,10 +455,11 @@ function kv(k,v){ return '<div class="kv"><span class="k">'+esc(k)+'</span><span
 function kvCap(k,o){
   var over=o.osob>KAP_OKAL;
   return '<div class="kv"><span class="k">'+esc(k)+'</span><span class="v tnum" style="'+
-    (over?"color:var(--warn)":"")+'">'+o.dosp+' dosp. + '+o.deti+' dětí · '+o.osob+'/'+KAP_OKAL+'</span></div>';
+    (over?"color:var(--warn)":"")+'">'+o.dosp+' dosp. + '+pluralDeti(o.deti)+' · '+o.osob+'/'+KAP_OKAL+'</span></div>';
 }
 function trimNum(n){ return (Math.round(n*100)/100).toString(); }
 function podily(n){ var k=Math.round(n); return k+" "+(k===1?"podíl":(k>=2&&k<=4?"podíly":"podílů")); }
+function pluralDeti(n){ var k=Math.round(n); return k+" "+(k===1?"dítě":(k>=2&&k<=4?"děti":"dětí")); }
 
 function renderAll(){ renderSeznam(); renderOkaly(); renderRozuctovani(); renderPivo(); }
 
