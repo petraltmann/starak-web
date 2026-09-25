@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="cs">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html,body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Pobyt Starák</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --ground:#F4F6F0; --surface:#FFFFFF; --surface-2:#EDF1E9; --raise:#FBFCF9;
+    --ink:#17211A; --muted:#5B6A60; --faint:#8A988D; --line:#DCE4D6;
+    --primary:#2E7D32; --primary-strong:#1B5E20; --on-primary:#FFFFFF;
+    --accent:#00695C; --child:#8A5A2C; --warn:#C62828; --warn-bg:#FBE4E1;
+    --ok:#2E7D32;
+    --shadow:0 1px 2px rgba(20,40,24,.06), 0 4px 16px rgba(20,40,24,.05);
+    --r:14px;
+    --display:"Bricolage Grotesque", system-ui, sans-serif;
+    --body:"Public Sans", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme:dark;
+      --ground:#0F130E; --surface:#171E15; --surface-2:#1E271C; --raise:#1C251A;
+      --ink:#E7EDE3; --muted:#9DAF9F; --faint:#71816F; --line:#2B3527;
+      --primary:#7FC784; --primary-strong:#A5D6A7; --on-primary:#0C1F0E;
+      --accent:#59C3B7; --child:#D6A167; --warn:#EF7E76; --warn-bg:#3A211F;
+      --ok:#7FC784;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --ground:#0F130E; --surface:#171E15; --surface-2:#1E271C; --raise:#1C251A;
+    --ink:#E7EDE3; --muted:#9DAF9F; --faint:#71816F; --line:#2B3527;
+    --primary:#7FC784; --primary-strong:#A5D6A7; --on-primary:#0C1F0E;
+    --accent:#59C3B7; --child:#D6A167; --warn:#EF7E76; --warn-bg:#3A211F;
+    --ok:#7FC784;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);
+    font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+  h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+  .tnum{font-variant-numeric:tabular-nums}
+
+  /* Header */
+  .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;
+    background:color-mix(in srgb,var(--ground) 88%, transparent);
+    backdrop-filter:saturate(1.4) blur(10px);
+    border-bottom:1px solid var(--line)}
+  .top-inner{display:flex;align-items:center;gap:12px;padding:12px 16px}
+  .glyph{width:34px;height:34px;flex:0 0 auto;color:var(--primary)}
+  .brand{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .brand h1{font-size:19px;font-weight:700;line-height:1.05}
+  .status{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);
+    letter-spacing:.02em}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:0 0 auto}
+  .dot.live{background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 22%,transparent)}
+  .dot.snap{background:var(--child)}
+  .refresh{margin-left:auto;flex:0 0 auto;border:1px solid var(--line);background:var(--raise);
+    color:var(--muted);border-radius:10px;padding:7px 9px;font:inherit;font-size:12px;cursor:pointer}
+  .refresh:active{transform:scale(.96)}
+
+  /* Tabs */
+  .tabs{position:sticky;top:calc(env(safe-area-inset-top,0px) + 59px);z-index:15;
+    display:flex;gap:4px;padding:8px 12px;background:var(--ground);
+    border-bottom:1px solid var(--line)}
+  .tab{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:600;
+    font-size:13.5px;padding:9px 6px;border-radius:10px;cursor:pointer;display:flex;
+    align-items:center;justify-content:center;gap:7px}
+  .tab[aria-selected="true"]{background:var(--primary);color:var(--on-primary);box-shadow:var(--shadow)}
+  .tab .ic{width:16px;height:16px}
+  .tab .lbl{}
+
+  main{padding:16px;padding-block:16px 40px;max-width:640px;margin:0 auto;
+    display:flex;flex-direction:column;gap:12px}
+  .section-title{font-family:var(--display);font-weight:700;font-size:15px;color:var(--primary);
+    margin:6px 2px 0;letter-spacing:.01em}
+  .hint{font-size:12px;color:var(--muted)}
+
+  /* Cards */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+    box-shadow:var(--shadow)}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+
+  .guest{padding:12px 14px}
+  .guest .nm{font-weight:600;font-size:15px}
+  .guest .meta{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .guest .price{font-family:var(--display);font-weight:700;color:var(--primary);white-space:nowrap}
+
+  /* Floor plan */
+  .okal-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;
+    margin:12px 2px 2px}
+  .okal-head h2{font-size:18px;font-weight:700;color:var(--primary)}
+  .cap{font-size:12px;color:var(--muted);white-space:nowrap}
+  .cap.over{color:var(--warn);font-weight:600}
+  .floor-lbl{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--accent);margin:8px 2px 2px}
+  .grid{display:grid;gap:8px;align-items:stretch}
+  .room{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px;
+    display:flex;flex-direction:column;gap:3px;min-height:100%}
+  .room.empty-room{opacity:.5}
+  .room.over{background:var(--warn-bg);border-color:color-mix(in srgb,var(--warn) 40%,var(--line))}
+  .room .rh{display:flex;align-items:center;justify-content:space-between}
+  .room .rl{font-family:var(--display);font-weight:700;font-size:16px}
+  .room .oc{font-size:11.5px;font-weight:600;color:var(--primary);
+    border:1px solid color-mix(in srgb,var(--primary) 35%,var(--line));border-radius:20px;padding:1px 7px}
+  .room.over .oc{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,var(--line))}
+  .room .who{font-size:12.5px;line-height:1.3}
+  .room .kids{font-size:12px;font-weight:600;color:var(--child)}
+  .room .free{font-size:12px;color:var(--faint)}
+  .spacer{border:1px dashed var(--line);border-radius:12px;opacity:.35}
+
+  /* Souhrn / rozúčtování */
+  .sum{padding:14px}
+  .sum h2{font-size:16px;font-weight:700;margin-bottom:8px}
+  .kv{display:flex;justify-content:space-between;gap:12px;padding:4px 0;font-size:14px}
+  .kv .k{color:var(--muted)}
+  .kv .v{font-weight:500}
+  .hr{height:1px;background:var(--line);margin:8px 0;border:0}
+  .total{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+  .total .k{font-weight:700}
+  .total .v{font-family:var(--display);font-weight:700;font-size:18px;color:var(--primary)}
+  .beer{padding:14px;background:var(--surface-2)}
+  .beer label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px}
+  .beer input{width:100%;font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+  .beer input:focus{outline:2px solid var(--primary);outline-offset:1px;border-color:var(--primary)}
+  .pay{padding:12px 14px}
+  .pay .nm{font-weight:600}
+  .pay .sub{font-size:12px;color:var(--muted)}
+  .pay .amt{font-family:var(--display);font-weight:700;color:var(--primary);white-space:nowrap}
+
+  .note{font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line);
+    border-radius:12px;padding:10px 12px;line-height:1.5}
+  .note b{color:var(--ink)}
+  a{color:var(--accent)}
+  :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+  @media (max-width:380px){ .tab .lbl{display:none} }
+</style>
+
+<header class="top">
+  <div class="top-inner">
+    <svg class="glyph" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <path d="M24 6 46 24h-6v18H8V24H2L24 6Z" fill="currentColor" opacity=".18"/>
+      <path d="M24 8.5 43 24" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <path d="M24 8.5 5 24" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <path d="M10 23v18h28V23" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+      <rect x="20" y="30" width="8" height="11" rx="1" fill="currentColor"/>
+    </svg>
+    <div class="brand">
+      <h1>Pobyt Starák</h1>
+      <div class="status" id="status"><span class="dot"></span><span id="statusText">Načítám…</span></div>
+    </div>
+    <button class="refresh" id="refreshBtn" title="Načíst znovu">↻</button>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Sekce">
+    <button class="tab" role="tab" data-tab="seznam" aria-selected="true">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+      <span class="lbl">Seznam</span></button>
+    <button class="tab" role="tab" data-tab="okaly" aria-selected="false">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11 12 4l9 7M5 10v10h14V10"/></svg>
+      <span class="lbl">Okály</span></button>
+    <button class="tab" role="tab" data-tab="rozuctovani" aria-selected="false">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>
+      <span class="lbl">Rozúčtování</span></button>
+  </nav>
+</header>
+
+<main>
+  <section id="panel-seznam" role="tabpanel"></section>
+  <section id="panel-okaly" role="tabpanel" hidden></section>
+  <section id="panel-rozuctovani" role="tabpanel" hidden></section>
+</main>
+
+<script>
+/* ---- Konstanty (zrcadlí Android aplikaci) ---- */
+var SHEET_ID = "1MoQwpQzF-Ir_6Ov-eKknX068iA_JhhzTgCdobXJc4rs";
+var POLOPENZE_DOSPELY = 670, POLOPENZE_DITE = 570, VYCHOZI_PIVO = 3600;
+var CAP = {A:3,B:5,C:2,D:4,E:3,F:5,G:4,H:3};
+var KAP_OKAL = 29;
+var OKALY = ["A","B"];
+var OKAL_NAZEV = {A:"Okál A – vlevo", B:"Okál B – vpravo (večírkovací)"};
+var PUDORYS = [
+  {nazev:"Přízemí", rady:[["B","C","D"],["A",null,"E"]]},
+  {nazev:"Patro", rady:[["F",null,"G"]]},
+  {nazev:"Suterén (společenská místnost)", rady:[["H"]]}
+];
+
+/* ---- Zabudovaný snímek (fallback, když nejdou živá data) ---- */
+var SNAP_DATE = "24. 7. 2026";
+var SNAP = [
+["Martin Doložílek","A","A",0,"2026-01-29",1,"2026-02-01",3],
+["Boris Novotný","A","C",0,"2026-01-29",1,"2026-02-01",3],
+["Radim Zubalík","A","C",0,"2026-01-29",1,"2026-02-01",3],
+["Jiří Zeman","A","D",0,"2026-01-29",0,"2026-02-01",3],
+["Michal Judas","A","E",1,"2026-01-29",1,"2026-02-01",3],
+["Lukáš Ingr","B","A",0,"2026-01-29",0,"2026-02-01",3],
+["Jana Přibylová","B","C",0,"2026-01-29",1,"2026-02-01",3],
+["Petr Altmann","B","D",1,"2026-01-29",1,"2026-02-01",3],
+["Daniel Marton","B","D",1,"2026-01-29",1,"2026-02-01",3],
+["Matěj Búřil","B","E",1,"2026-01-29",1,"2026-02-01",3],
+["Petr Zapletal","B","F",0,"2026-01-29",0,"2026-02-01",3],
+["Marek Šrom","B","H",0,"2026-01-29",1,"2026-01-31",3],
+["Jakub Slabák","A","A",0,"2026-01-29",1,"2026-01-31",2],
+["Petr Jan Kryštof","A","B",0,"2026-01-29",0,"2026-02-01",2],
+["Roman Fiamoli","B","F",0,"2026-01-29",0,"2026-01-31",2],
+["Lecián David","B","G",1,"2026-01-29",1,"2026-02-01",2],
+["Bára Němcová","B","C",0,"2026-01-31",0,"2026-02-01",1],
+["Petra Kryštofová","A","B",2,"2026-01-29",0,"2026-02-01",0],
+["Šimon Kryštof","A","B",0,"2026-01-29",0,"2026-02-01",0],
+["Jana Kalvodová","A","D",2,"2026-01-29",0,"2026-02-01",0],
+["Bebeta Judasová","A","E",0,"2026-01-29",1,"2026-02-01",0],
+["Tereza Novotná","A","F",0,"2026-01-29",1,"2026-02-01",0],
+["Zuzana Novotná","A","F",0,"2026-01-29",1,"2026-02-01",0],
+["Ema Zubalíková","A","F",0,"2026-01-29",1,"2026-02-01",0],
+["Roza Kryštofová","A","G",0,"2026-01-29",0,"2026-02-01",0],
+["Anastázie Dvořáková","A","G",0,"2026-01-29",0,"2026-02-01",0],
+["Hedvika Marie Milostna","A","G",0,"2026-01-29",0,"2026-02-01",0],
+["Lukáš Satrapa","A","H",0,"2026-01-29",1,"2026-02-01",0],
+["Vojta Ingr","B","A",0,"2026-01-29",0,"2026-02-01",0],
+["Anna Fiamoli","B","F",0,"2026-01-29",0,"2026-01-31",0],
+["Petra Zapletalová","B","F",0,"2026-01-29",0,"2026-02-01",0],
+["Leciánová Sofie","B","G",0,"2026-01-29",1,"2026-02-01",0]
+];
+
+/* ---- Stav ---- */
+var guests = [];
+var castkaPivo = VYCHOZI_PIVO;
+
+/* ---- Pomocné ---- */
+function kc(n){
+  n = Math.round(n);
+  var neg = n<0; n = Math.abs(n);
+  var s = String(n), out = "";
+  for(var i=0;i<s.length;i++){ if(i>0 && (s.length-i)%3===0) out+=" "; out+=s[i]; }
+  return (neg?"−":"")+out+" Kč";
+}
+function d2(d){ return d.getDate()+"."+(d.getMonth()+1)+"."; }
+function noci(g){ return Math.max(0, Math.round((g.odjezd-g.prijezd)/86400000)); }
+function cenaPolopenze(g){ var n=noci(g); return n*POLOPENZE_DOSPELY + g.deti*n*POLOPENZE_DITE; }
+function sumaPodilu(){ return guests.reduce(function(s,g){return s+g.konz;},0); }
+function cenaZaPodil(){ var p=sumaPodilu(); return p>0 ? castkaPivo/p : 0; }
+function pivoOsoby(g){ return Math.round(g.konz*cenaZaPodil()); }
+
+/* ---- Načtení dat: gviz JSONP (živá) s fallbackem na snímek ---- */
+function parseCz(cell){
+  if(!cell) return null;
+  if(cell.f && /^\s*\d+\.\d+\.\d+/.test(cell.f)){
+    var p=cell.f.split("."); return new Date(+p[2],+p[1]-1,+p[0]);
+  }
+  if(typeof cell.v==="string"){
+    var m=cell.v.match(/Date\((\d+),(\d+),(\d+)\)/);
+    if(m) return new Date(+m[1],+m[2],+m[3]);
+  }
+  return null;
+}
+function fromGviz(resp){
+  var rows = resp.table.rows, out=[];
+  for(var i=0;i<rows.length;i++){
+    var c=rows[i].c||[];
+    var jm = c[0]&&c[0].v!=null ? String(c[0].v).trim() : "";
+    if(!jm) continue;
+    var prij=parseCz(c[4]), odj=parseCz(c[6]);
+    if(!prij||!odj) continue; // vynechá souhrnové řádky
+    out.push({
+      jmeno: jm,
+      okal: c[1]&&c[1].v?String(c[1].v).trim().toUpperCase():"A",
+      pokoj: c[2]&&c[2].v?String(c[2].v).trim().toUpperCase():"A",
+      deti: c[3]&&c[3].v?Math.round(c[3].v):0,
+      prijezd: prij, odjezd: odj,
+      vecere: !!(c[5]&&c[5].v),
+      konz: c[9]&&c[9].v?+c[9].v:0
+    });
+  }
+  return out;
+}
+function fromSnap(){
+  return SNAP.map(function(r){
+    return {jmeno:r[0], okal:r[1], pokoj:r[2], deti:r[3],
+      prijezd:new Date(r[4]+"T00:00:00"), vecere:!!r[5],
+      odjezd:new Date(r[6]+"T00:00:00"), konz:r[7]};
+  });
+}
+function setStatus(kind, text){
+  var dot=document.querySelector("#status .dot");
+  dot.className="dot"+(kind==="live"?" live":kind==="snap"?" snap":"");
+  document.getElementById("statusText").textContent=text;
+}
+function loadLive(cb){
+  var fn="__starak_"+Date.now();
+  var url="https://docs.google.com/spreadsheets/d/"+SHEET_ID+
+    "/gviz/tq?sheet=Seznam&tqx=out:json;responseHandler:"+fn;
+  var done=false, s=document.createElement("script");
+  function cleanup(){ try{delete window[fn];}catch(e){} if(s.parentNode) s.parentNode.removeChild(s); }
+  var timer=setTimeout(function(){ if(!done){done=true;cleanup();cb(null);} }, 5000);
+  window[fn]=function(resp){
+    if(done) return; done=true; clearTimeout(timer); cleanup();
+    try{ cb(fromGviz(resp)); }catch(e){ cb(null); }
+  };
+  s.onerror=function(){ if(!done){done=true;clearTimeout(timer);cleanup();cb(null);} };
+  s.src=url; document.head.appendChild(s);
+}
+function load(){
+  setStatus("", "Načítám živá data…");
+  loadLive(function(live){
+    if(live && live.length){
+      guests=live;
+      var now=new Date();
+      setStatus("live","Živá data · "+now.getDate()+"."+(now.getMonth()+1)+"."+now.getFullYear()+
+        " "+String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0"));
+    }else{
+      guests=fromSnap();
+      setStatus("snap","Offline snímek · data k "+SNAP_DATE);
+    }
+    renderAll();
+  });
+}
+
+/* ---- Vykreslení ---- */
+function esc(s){ return String(s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];}); }
+
+function renderSeznam(){
+  var el=document.getElementById("panel-seznam"); el.innerHTML="";
+  OKALY.forEach(function(ok){
+    var lidi=guests.filter(function(g){return g.okal===ok;})
+      .sort(function(a,b){return (a.pokoj+a.jmeno).localeCompare(b.pokoj+b.jmeno,"cs");});
+    if(!lidi.length) return;
+    var h=document.createElement("div"); h.className="section-title";
+    h.textContent=OKAL_NAZEV[ok]||("Okál "+ok); el.appendChild(h);
+    lidi.forEach(function(g){
+      var deti=g.deti>0?(" · "+g.deti+" dětí"):"";
+      var card=document.createElement("div"); card.className="card guest row";
+      card.innerHTML=
+        '<div><div class="nm">'+esc(g.jmeno)+'</div>'+
+        '<div class="meta">Pokoj '+esc(g.pokoj)+deti+' · '+noci(g)+' nocí · '+d2(g.prijezd)+'–'+d2(g.odjezd)+'</div></div>'+
+        '<div class="price tnum">'+kc(cenaPolopenze(g)+pivoOsoby(g))+'</div>';
+      el.appendChild(card);
+    });
+  });
+}
+
+function roomInfo(ok, pokoj){
+  var lidi=guests.filter(function(g){return g.okal===ok && g.pokoj===pokoj;})
+    .sort(function(a,b){return a.jmeno.localeCompare(b.jmeno,"cs");});
+  var deti=lidi.reduce(function(s,g){return s+g.deti;},0);
+  return {lidi:lidi, deti:deti, kap:CAP[pokoj]||0, osob:lidi.length+deti};
+}
+function renderOkaly(){
+  var el=document.getElementById("panel-okaly"); el.innerHTML="";
+  OKALY.forEach(function(ok){
+    var osob=0; Object.keys(CAP).forEach(function(p){ osob+=roomInfo(ok,p).osob; });
+    var head=document.createElement("div"); head.className="okal-head";
+    head.innerHTML='<h2>'+esc(OKAL_NAZEV[ok]||("Okál "+ok))+'</h2>'+
+      '<span class="cap '+(osob>KAP_OKAL?"over":"")+' tnum">'+osob+' / '+KAP_OKAL+' lůžek</span>';
+    el.appendChild(head);
+    PUDORYS.forEach(function(patro){
+      var lbl=document.createElement("div"); lbl.className="floor-lbl";
+      lbl.textContent=patro.nazev; el.appendChild(lbl);
+      patro.rady.forEach(function(rada){
+        var grid=document.createElement("div"); grid.className="grid";
+        grid.style.gridTemplateColumns="repeat("+rada.length+",1fr)";
+        rada.forEach(function(slot){
+          if(!slot){ var sp=document.createElement("div"); sp.className="spacer"; grid.appendChild(sp); return; }
+          var info=roomInfo(ok,slot);
+          var over=info.osob>info.kap, free=info.lidi.length===0&&info.deti===0;
+          var room=document.createElement("div");
+          room.className="room"+(over?" over":"")+(free?" empty-room":"");
+          var who = free ? '<div class="free">volný</div>'
+            : info.lidi.map(function(g){return '<div class="who">'+esc(g.jmeno)+'</div>';}).join("")
+              + (info.deti>0?'<div class="kids">+ '+info.deti+' dětí</div>':"");
+          room.innerHTML='<div class="rh"><span class="rl">'+slot+'</span>'+
+            '<span class="oc tnum">'+info.osob+'/'+info.kap+'</span></div>'+who;
+          grid.appendChild(room);
+        });
+        el.appendChild(grid);
+      });
+    });
+  });
+}
+
+function renderRozuctovani(){
+  var el=document.getElementById("panel-rozuctovani"); el.innerHTML="";
+  var dosp=guests.length, deti=guests.reduce(function(s,g){return s+g.deti;},0);
+  function okalSum(ok){
+    var l=guests.filter(function(g){return g.okal===ok;});
+    var d=l.reduce(function(s,g){return s+g.deti;},0);
+    var cena=l.reduce(function(s,g){return s+cenaPolopenze(g);},0);
+    return {dosp:l.length, deti:d, osob:l.length+d, cena:cena};
+  }
+  var A=okalSum("A"), B=okalSum("B");
+  var cenaCelk=guests.reduce(function(s,g){return s+cenaPolopenze(g);},0);
+  var pvD=guests.filter(function(g){return g.vecere;}).length;
+  var pvDeti=guests.filter(function(g){return g.vecere;}).reduce(function(s,g){return s+g.deti;},0);
+
+  var sum=document.createElement("div"); sum.className="card sum";
+  sum.innerHTML=
+    '<h2>Souhrn pobytu</h2>'+
+    kv("Dospělí", dosp)+kv("Děti (3–10 let)", deti)+kv("Osob celkem", dosp+deti)+
+    '<hr class="hr">'+
+    kvCap(OKAL_NAZEV.A, A)+kvCap(OKAL_NAZEV.B, B)+
+    '<hr class="hr">'+
+    kv("První večeře (catering)", pvD+" dosp. + "+pvDeti+" dětí")+
+    '<hr class="hr">'+
+    '<div class="total"><span class="k">Celkem polopenze</span><span class="v tnum">'+kc(cenaCelk)+'</span></div>';
+  el.appendChild(sum);
+
+  var beer=document.createElement("div"); beer.className="card beer";
+  beer.innerHTML=
+    '<label for="beer">Celková částka za pivo (Kč)</label>'+
+    '<input id="beer" type="number" inputmode="numeric" value="'+castkaPivo+'" min="0" step="10">'+
+    '<div style="margin-top:10px">'+kv("Součet podílů", trimNum(sumaPodilu()))+
+    kv("Cena za podíl", kc(cenaZaPodil()))+'</div>';
+  el.appendChild(beer);
+  beer.querySelector("#beer").addEventListener("input", function(e){
+    castkaPivo = parseInt(e.target.value,10)||0;
+    // přepočítat jen odvozené části (beze ztráty fokusu)
+    beer.querySelectorAll(".kv .v")[0].textContent=trimNum(sumaPodilu());
+    beer.querySelectorAll(".kv .v")[1].textContent=kc(cenaZaPodil());
+    updatePayList();
+    renderSeznam();
+  });
+
+  var ttl=document.createElement("div"); ttl.className="section-title"; ttl.textContent="Kdo kolik platí";
+  el.appendChild(ttl);
+  var list=document.createElement("div"); list.id="payList";
+  list.style.display="flex"; list.style.flexDirection="column"; list.style.gap="10px";
+  el.appendChild(list);
+  updatePayList();
+
+  function updatePayList(){
+    list.innerHTML="";
+    guests.slice().sort(function(a,b){return b.konz-a.konz || a.jmeno.localeCompare(b.jmeno,"cs");})
+    .forEach(function(g){
+      var pol=cenaPolopenze(g), pv=pivoOsoby(g);
+      var c=document.createElement("div"); c.className="card pay row";
+      c.innerHTML='<div><div class="nm">'+esc(g.jmeno)+'</div>'+
+        '<div class="sub">polopenze '+kc(pol)+' · pivo '+kc(pv)+'</div></div>'+
+        '<div class="amt tnum">'+kc(pol+pv)+'</div>';
+      list.appendChild(c);
+    });
+  }
+  el._updatePayList=updatePayList;
+}
+function kv(k,v){ return '<div class="kv"><span class="k">'+esc(k)+'</span><span class="v tnum">'+esc(v)+'</span></div>'; }
+function kvCap(k,o){
+  var over=o.osob>KAP_OKAL;
+  return '<div class="kv"><span class="k">'+esc(k)+'</span><span class="v tnum" style="'+
+    (over?"color:var(--warn)":"")+'">'+o.dosp+' dosp. + '+o.deti+' dětí · '+o.osob+'/'+KAP_OKAL+'</span></div>';
+}
+function trimNum(n){ return (Math.round(n*100)/100).toString(); }
+
+function renderAll(){ renderSeznam(); renderOkaly(); renderRozuctovani(); }
+
+/* ---- Přepínání záložek ---- */
+function showTab(name){
+  document.querySelectorAll(".tab").forEach(function(t){
+    t.setAttribute("aria-selected", t.dataset.tab===name ? "true":"false");
+  });
+  ["seznam","okaly","rozuctovani"].forEach(function(n){
+    document.getElementById("panel-"+n).hidden = (n!==name);
+  });
+  try{ if(location.hash.slice(1)!==name) history.replaceState(null,"","#"+name); }catch(e){}
+  window.scrollTo(0,0);
+}
+document.querySelectorAll(".tab").forEach(function(t){
+  t.addEventListener("click", function(){ showTab(t.dataset.tab); });
+});
+document.getElementById("refreshBtn").addEventListener("click", load);
+
+var initial=(location.hash||"").slice(1);
+showTab(["seznam","okaly","rozuctovani"].indexOf(initial)>=0 ? initial : "seznam");
+load();
+</script>
