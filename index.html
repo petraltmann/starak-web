@@ -259,15 +259,14 @@ function pivoOsoby(g){ return Math.round(g.konz*cenaZaPodil()); }
 function rodiny(){
   var map={}, order=[];
   guests.forEach(function(g){
-    var named=!!(g.rodina&&g.rodina.trim());
-    var label=named?g.rodina.trim():g.jmeno;
-    var key=named?("R:"+label):("O:"+g.jmeno);
-    if(!map[key]){ map[key]={label:label, named:named, clenove:[], cena:0}; order.push(key); }
+    if(!(g.rodina&&g.rodina.trim())) return; // bez vyplněné rodiny se nezobrazuje
+    var label=g.rodina.trim(), key="R:"+label;
+    if(!map[key]){ map[key]={label:label, clenove:[], cena:0}; order.push(key); }
     map[key].clenove.push(g.jmeno);
     map[key].cena+=cenaPolopenze(g);
   });
   return order.map(function(k){return map[k];})
-    .sort(function(a,b){ if(a.named!==b.named) return a.named?-1:1; return a.label.localeCompare(b.label,"cs"); });
+    .sort(function(a,b){ return a.label.localeCompare(b.label,"cs"); });
 }
 
 /* ---- Načtení dat: gviz JSONP (živá) s fallbackem na snímek ---- */
