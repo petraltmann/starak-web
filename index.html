@@ -206,6 +206,9 @@
     <button class="tab" role="tab" data-tab="pivo" aria-selected="false">
       <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h9v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8Z"/><path d="M15 10h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2"/><path d="M6.5 8a2.5 2.5 0 1 1 3-3 2.2 2.2 0 0 1 3 .3"/></svg>
       <span class="lbl">Pivo</span></button>
+    <button class="tab" role="tab" data-tab="vecere" aria-selected="false">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7M9 3v7M7.5 10v11M7.5 10a1.5 1.5 0 0 0 1.5-1.5V3M7.5 10a1.5 1.5 0 0 1-1.5-1.5V3"/><path d="M17 3c-1.4 1-2.2 3-2.2 5.4 0 2 .9 3.1 2.2 3.6V21"/></svg>
+      <span class="lbl">1. večeře</span></button>
   </nav>
 </header>
 
@@ -214,6 +217,7 @@
   <section id="panel-okalA" role="tabpanel" hidden></section>
   <section id="panel-okalB" role="tabpanel" hidden></section>
   <section id="panel-pivo" role="tabpanel" hidden></section>
+  <section id="panel-vecere" role="tabpanel" hidden></section>
 </main>
 
 <div id="qrModal" class="qr-modal" hidden>
@@ -477,8 +481,6 @@ function renderRozuctovani(){
   }
   var A=okalSum("A"), B=okalSum("B");
   var cenaCelk=guests.reduce(function(s,g){return s+cenaPolopenze(g);},0);
-  var pvD=guests.filter(function(g){return g.vecere;}).length;
-  var pvDeti=guests.filter(function(g){return g.vecere;}).reduce(function(s,g){return s+g.deti;},0);
   var zaplPol=guests.filter(function(g){return g.zapPolopenze;}).reduce(function(s,g){return s+cenaPolopenze(g);},0);
   var zaplPivo=guests.filter(function(g){return g.zapPivo;}).reduce(function(s,g){return s+pivoOsoby(g);},0);
   var zaplCelkem=zaplPol+zaplPivo;
@@ -489,8 +491,6 @@ function renderRozuctovani(){
     kv("Dospělí", dosp)+kv("Děti (3–10 let)", deti)+kv("Osob celkem", dosp+deti)+
     '<hr class="hr">'+
     kvCap(OKAL_NAZEV.A, A)+kvCap(OKAL_NAZEV.B, B)+
-    '<hr class="hr">'+
-    kv("První večeře", pvD+" dosp. + "+pluralDeti(pvDeti))+
     '<hr class="hr">'+
     '<div class="total"><span class="k">Celkem polopenze</span><span class="v tnum">'+kc(cenaCelk)+'</span></div>'+
     '<div class="kv" style="margin-top:6px"><span class="k">Zaplaceno celkem</span>'+
@@ -558,14 +558,42 @@ function podily(n){ var k=Math.round(n); return k+" "+(k===1?"podíl":(k>=2&&k<=
 function pluralDeti(n){ var k=Math.round(n); return k+" "+(k===1?"dítě":(k>=2&&k<=4?"děti":"dětí")); }
 function span(slot){ return slot==="SPOL" ? 2 : 1; }
 
-function renderAll(){ renderRozuctovani(); renderOkaly(); renderPivo(); }
+function renderVecere(){
+  var el=document.getElementById("panel-vecere"); el.innerHTML="";
+  var lidi=guests.filter(function(g){return g.vecere;})
+    .sort(function(a,b){return (a.okal+a.pokoj+a.jmeno).localeCompare(b.okal+b.pokoj+b.jmeno,"cs");});
+  var det=lidi.reduce(function(s,g){return s+g.deti;},0);
+
+  var head=document.createElement("div"); head.className="card sum";
+  head.innerHTML='<h2>První večeře</h2>'+
+    kv("Dospělí", lidi.length)+kv("Děti (3–10 let)", det)+
+    '<hr class="hr">'+
+    '<div class="total"><span class="k">Celkem porcí</span><span class="v tnum">'+(lidi.length+det)+'</span></div>';
+  el.appendChild(head);
+
+  var ttl=document.createElement("div"); ttl.className="section-title"; ttl.textContent="Kdo má první večeři";
+  el.appendChild(ttl);
+  if(!lidi.length){
+    var none=document.createElement("div"); none.className="note"; none.textContent="Nikdo nemá první večeři.";
+    el.appendChild(none); return;
+  }
+  lidi.forEach(function(g){
+    var deti=g.deti>0?(" · "+pluralDeti(g.deti)):"";
+    var c=document.createElement("div"); c.className="card pay row";
+    c.innerHTML='<div><div class="nm">'+esc(g.jmeno)+'</div>'+
+      '<div class="sub">Okál '+esc(g.okal)+' · pokoj '+esc(g.pokoj)+deti+'</div></div>';
+    el.appendChild(c);
+  });
+}
+
+function renderAll(){ renderRozuctovani(); renderOkaly(); renderPivo(); renderVecere(); }
 
 /* ---- Přepínání záložek ---- */
 function showTab(name){
   document.querySelectorAll(".tab").forEach(function(t){
     t.setAttribute("aria-selected", t.dataset.tab===name ? "true":"false");
   });
-  ["rozuctovani","okalA","okalB","pivo"].forEach(function(n){
+  ["rozuctovani","okalA","okalB","pivo","vecere"].forEach(function(n){
     document.getElementById("panel-"+n).hidden = (n!==name);
   });
   try{ if(location.hash.slice(1)!==name) history.replaceState(null,"","#"+name); }catch(e){}
@@ -628,6 +656,6 @@ document.getElementById("qrModal").addEventListener("click", function(e){ if(e.t
 document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeQr(); });
 
 var initial=(location.hash||"").slice(1);
-showTab(["rozuctovani","okalA","okalB","pivo"].indexOf(initial)>=0 ? initial : "rozuctovani");
+showTab(["rozuctovani","okalA","okalB","pivo","vecere"].indexOf(initial)>=0 ? initial : "rozuctovani");
 load();
 </script>
