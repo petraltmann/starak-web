@@ -143,9 +143,12 @@
     background:var(--raise);color:var(--muted);cursor:pointer;padding:0}
   .qr-btn:active{transform:scale(.94)}
   .qr-btn svg{width:18px;height:18px}
-  .paid-badge{flex:0 0 auto;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;
-    color:var(--ok);background:color-mix(in srgb,var(--ok) 14%, transparent);
-    border:1px solid color-mix(in srgb,var(--ok) 32%, var(--line));border-radius:20px;padding:5px 10px;white-space:nowrap}
+  .amt.paid{text-decoration:line-through;color:var(--muted);font-weight:600}
+  .paid-mark{flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+    width:34px;height:34px;border-radius:9px;color:var(--ok);
+    border:1px solid color-mix(in srgb,var(--ok) 32%, var(--line));
+    background:color-mix(in srgb,var(--ok) 14%, transparent)}
+  .paid-mark svg{width:18px;height:18px}
   /* QR modal */
   .qr-modal{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
     padding:20px;background:rgba(0,0,0,.55)}
@@ -304,9 +307,13 @@ function spd(am, label){
 }
 function ibanPretty(){ return IBAN.replace(/(.{4})/g,"$1 ").trim(); }
 var QR_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M20 14v.01M14 20v.01M20 20v.01M17 17v.01M20 17h.01M17 20h.01"/></svg>';
-function payCtrl(paid, am, label){
-  return paid ? '<span class="paid-badge">✓ Zaplaceno</span>'
+var CHECK_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>';
+function payRight(paid, am, label){
+  var amt='<div class="amt tnum'+(paid?' paid':'')+'">'+kc(am)+'</div>';
+  var ctrl = paid
+    ? '<span class="paid-mark" title="Zaplaceno" aria-label="Zaplaceno">'+CHECK_SVG+'</span>'
     : '<button class="qr-btn" data-am="'+am+'" data-label="'+esc(label)+'" aria-label="QR platba">'+QR_SVG+'</button>';
+  return '<div class="pay-right">'+amt+ctrl+'</div>';
 }
 
 function rodiny(){
@@ -472,6 +479,9 @@ function renderRozuctovani(){
   var cenaCelk=guests.reduce(function(s,g){return s+cenaPolopenze(g);},0);
   var pvD=guests.filter(function(g){return g.vecere;}).length;
   var pvDeti=guests.filter(function(g){return g.vecere;}).reduce(function(s,g){return s+g.deti;},0);
+  var zaplPol=guests.filter(function(g){return g.zapPolopenze;}).reduce(function(s,g){return s+cenaPolopenze(g);},0);
+  var zaplPivo=guests.filter(function(g){return g.zapPivo;}).reduce(function(s,g){return s+pivoOsoby(g);},0);
+  var zaplCelkem=zaplPol+zaplPivo;
 
   var sum=document.createElement("div"); sum.className="card sum";
   sum.innerHTML=
@@ -482,7 +492,9 @@ function renderRozuctovani(){
     '<hr class="hr">'+
     kv("První večeře (catering)", pvD+" dosp. + "+pluralDeti(pvDeti))+
     '<hr class="hr">'+
-    '<div class="total"><span class="k">Celkem polopenze</span><span class="v tnum">'+kc(cenaCelk)+'</span></div>';
+    '<div class="total"><span class="k">Celkem polopenze</span><span class="v tnum">'+kc(cenaCelk)+'</span></div>'+
+    '<div class="kv" style="margin-top:6px"><span class="k">Zaplaceno celkem</span>'+
+    '<span class="v tnum" style="color:var(--ok);font-weight:700">'+kc(zaplCelkem)+'</span></div>';
   el.appendChild(sum);
 
   // Polopenze po rodinách
@@ -492,7 +504,7 @@ function renderRozuctovani(){
     var c=document.createElement("div"); c.className="card pay row";
     c.innerHTML='<div><div class="nm">'+esc(r.label)+'</div>'+
       '<div class="sub">'+esc(r.clenove.join(", "))+'</div></div>'+
-      '<div class="pay-right"><div class="amt tnum">'+kc(r.cena)+'</div>'+payCtrl(r.zaplaceno, r.cena, r.label)+'</div>';
+      payRight(r.zaplaceno, r.cena, r.label);
     el.appendChild(c);
   });
 
@@ -504,7 +516,7 @@ function renderRozuctovani(){
     var pol=cenaPolopenze(g);
     c.innerHTML='<div><div class="nm">'+esc(g.jmeno)+'</div>'+
       '<div class="sub">Pokoj '+esc(g.pokoj)+' · '+noci(g)+' nocí</div></div>'+
-      '<div class="pay-right"><div class="amt tnum">'+kc(pol)+'</div>'+payCtrl(g.zapPolopenze, pol, g.jmeno)+'</div>';
+      payRight(g.zapPolopenze, pol, g.jmeno);
     el.appendChild(c);
   });
 }
@@ -531,7 +543,7 @@ function renderPivo(){
     var pv=pivoOsoby(g);
     c.innerHTML='<div><div class="nm">'+esc(g.jmeno)+'</div>'+
       '<div class="sub">'+podily(g.konz)+'</div></div>'+
-      '<div class="pay-right"><div class="amt tnum">'+kc(pv)+'</div>'+payCtrl(g.zapPivo, pv, g.jmeno+' (pivo)')+'</div>';
+      payRight(g.zapPivo, pv, g.jmeno+' (pivo)');
     el.appendChild(c);
   });
 }
