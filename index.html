@@ -156,6 +156,9 @@
   .qr-am{font-family:var(--display);font-weight:700;font-size:22px;color:var(--primary);margin-top:14px}
   .qr-msg{font-size:14px;margin-top:2px}
   .qr-acc{font-size:12px;color:var(--muted);margin-top:6px;font-variant-numeric:tabular-nums}
+  .qr-save{margin-top:14px;border:0;border-radius:11px;padding:11px 16px;font:inherit;font-weight:600;
+    background:var(--primary);color:var(--on-primary);cursor:pointer}
+  .qr-save:active{transform:scale(.97)}
   .qr-hint{font-size:12px;color:var(--faint);margin-top:10px}
 
   .note{font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line);
@@ -215,7 +218,8 @@
     <div class="qr-am" id="qrAm"></div>
     <div class="qr-msg" id="qrMsg"></div>
     <div class="qr-acc" id="qrAcc"></div>
-    <div class="qr-hint">Naskenuj v bankovní aplikaci.</div>
+    <button class="qr-save" id="qrSave" type="button">Uložit QR do obrázků</button>
+    <div class="qr-hint">Naskenuj v bankovní aplikaci. Na iPhonu lze QR uložit i podržením prstu.</div>
   </div>
 </div>
 
@@ -542,7 +546,9 @@ document.querySelectorAll(".tab").forEach(function(t){
 document.getElementById("refreshBtn").addEventListener("click", load);
 
 /* ---- QR modal ---- */
+var qrCurrent={am:0,label:""};
 function openQr(am, label){
+  qrCurrent={am:am,label:label};
   var img=document.getElementById("qrImg"); img.innerHTML="";
   var text=spd(am, label);
   if(window.QRCode){
@@ -556,10 +562,24 @@ function openQr(am, label){
   document.getElementById("qrModal").hidden=false;
 }
 function closeQr(){ document.getElementById("qrModal").hidden=true; document.getElementById("qrImg").innerHTML=""; }
+function qrDataUrl(){
+  var img=document.getElementById("qrImg");
+  var c=img.querySelector("canvas");
+  if(c){ try{ return c.toDataURL("image/png"); }catch(e){} }
+  var i=img.querySelector("img");
+  return i ? i.src : "";
+}
+function saveQr(){
+  var url=qrDataUrl(); if(!url) return;
+  var name=("qr-platba-"+ascii(qrCurrent.label)).replace(/\s+/g,"-").toLowerCase()+".png";
+  var a=document.createElement("a"); a.href=url; a.download=name;
+  document.body.appendChild(a); a.click(); a.remove();
+}
 document.addEventListener("click", function(e){
   var btn=e.target.closest ? e.target.closest(".qr-btn") : null;
   if(btn){ openQr(parseInt(btn.dataset.am,10)||0, btn.dataset.label||""); }
 });
+document.getElementById("qrSave").addEventListener("click", saveQr);
 document.getElementById("qrClose").addEventListener("click", closeQr);
 document.getElementById("qrModal").addEventListener("click", function(e){ if(e.target.id==="qrModal") closeQr(); });
 document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeQr(); });
