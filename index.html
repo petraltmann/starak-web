@@ -104,7 +104,6 @@
     background:color-mix(in srgb,var(--accent) 13%, var(--surface-2));
     border-color:color-mix(in srgb,var(--accent) 32%, var(--line))}
   .room.spol .rl{font-family:var(--display);font-weight:700;font-size:15px}
-  .ic-letter{width:auto;font-family:var(--display);font-weight:700;font-size:15px;line-height:1}
   .room{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px;
     display:flex;flex-direction:column;gap:3px;min-height:100%}
   .room.empty-room{opacity:.5}
@@ -144,7 +143,7 @@
   .note b{color:var(--ink)}
   a{color:var(--accent)}
   :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
-  @media (max-width:480px){ .tab .lbl{display:none} }
+  @media (max-width:480px){ .tab .lbl:not(.lbl-keep){display:none} }
   /* Pivo tab */
   .pivo-head{padding:14px}
   .pivo-head h2{font-size:16px;font-weight:700;margin-bottom:8px}
@@ -170,11 +169,11 @@
       <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>
       <span class="lbl">Rozúčtování</span></button>
     <button class="tab" role="tab" data-tab="okalA" aria-selected="false">
-      <span class="ic ic-letter">A</span>
-      <span class="lbl">Okál A</span></button>
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11 12 4l9 7M5 10v10h14V10"/></svg>
+      <span class="lbl lbl-keep">A</span></button>
     <button class="tab" role="tab" data-tab="okalB" aria-selected="false">
-      <span class="ic ic-letter">B</span>
-      <span class="lbl">Okál B</span></button>
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11 12 4l9 7M5 10v10h14V10"/></svg>
+      <span class="lbl lbl-keep">B</span></button>
     <button class="tab" role="tab" data-tab="pivo" aria-selected="false">
       <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h9v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8Z"/><path d="M15 10h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2"/><path d="M6.5 8a2.5 2.5 0 1 1 3-3 2.2 2.2 0 0 1 3 .3"/></svg>
       <span class="lbl">Pivo</span></button>
