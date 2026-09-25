@@ -137,6 +137,26 @@
   .pay .nm{font-weight:600}
   .pay .sub{font-size:12px;color:var(--muted)}
   .pay .amt{font-family:var(--display);font-weight:700;color:var(--primary);white-space:nowrap}
+  .pay-right{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+  .qr-btn{flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+    width:34px;height:34px;border-radius:9px;border:1px solid var(--line);
+    background:var(--raise);color:var(--muted);cursor:pointer;padding:0}
+  .qr-btn:active{transform:scale(.94)}
+  .qr-btn svg{width:18px;height:18px}
+  /* QR modal */
+  .qr-modal{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+    padding:20px;background:rgba(0,0,0,.55)}
+  .qr-box{position:relative;background:var(--surface);color:var(--ink);border:1px solid var(--line);
+    border-radius:18px;box-shadow:var(--shadow);padding:22px;max-width:320px;width:100%;text-align:center}
+  .qr-close{position:absolute;top:8px;right:10px;border:0;background:transparent;color:var(--muted);
+    font-size:26px;line-height:1;cursor:pointer}
+  .qr-title{font-family:var(--display);font-weight:700;font-size:17px;margin-bottom:14px}
+  .qr-img{display:flex;justify-content:center;padding:10px;background:#fff;border-radius:12px;width:fit-content;margin:0 auto}
+  .qr-img img,.qr-img canvas{display:block}
+  .qr-am{font-family:var(--display);font-weight:700;font-size:22px;color:var(--primary);margin-top:14px}
+  .qr-msg{font-size:14px;margin-top:2px}
+  .qr-acc{font-size:12px;color:var(--muted);margin-top:6px;font-variant-numeric:tabular-nums}
+  .qr-hint{font-size:12px;color:var(--faint);margin-top:10px}
 
   .note{font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line);
     border-radius:12px;padding:10px 12px;line-height:1.5}
@@ -187,10 +207,24 @@
   <section id="panel-pivo" role="tabpanel" hidden></section>
 </main>
 
+<div id="qrModal" class="qr-modal" hidden>
+  <div class="qr-box" role="dialog" aria-modal="true" aria-label="QR platba">
+    <button class="qr-close" id="qrClose" aria-label="Zavřít">×</button>
+    <div class="qr-title">QR Platba</div>
+    <div id="qrImg" class="qr-img"></div>
+    <div class="qr-am" id="qrAm"></div>
+    <div class="qr-msg" id="qrMsg"></div>
+    <div class="qr-acc" id="qrAcc"></div>
+    <div class="qr-hint">Naskenuj v bankovní aplikaci.</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 /* ---- Konstanty (zrcadlí Android aplikaci) ---- */
 var SHEET_ID = "1MoQwpQzF-Ir_6Ov-eKknX068iA_JhhzTgCdobXJc4rs";
 var POLOPENZE_DOSPELY = 670, POLOPENZE_DITE = 570, VYCHOZI_PIVO = 3600;
+var IBAN = "CZ9130300000003440689044"; // účet pro QR Platbu (3440689044/3030)
 var CAP = {A:3,B:5,C:2,D:4,E:3,F:5,G:4,H:3};
 var KAP_OKAL = 29;
 var OKALY = ["A","B"];
@@ -256,6 +290,14 @@ function cenaPolopenze(g){ var n=noci(g); return n*POLOPENZE_DOSPELY + g.deti*n*
 function sumaPodilu(){ return guests.reduce(function(s,g){return s+g.konz;},0); }
 function cenaZaPodil(){ var p=sumaPodilu(); return p>0 ? castkaPivo/p : 0; }
 function pivoOsoby(g){ return Math.round(g.konz*cenaZaPodil()); }
+/* ---- QR Platba (SPD) ---- */
+function ascii(s){ return (s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\*/g,""); }
+function spd(am, label){
+  return "SPD*1.0*ACC:"+IBAN+"*AM:"+am+"*CC:CZK*MSG:"+ascii("Pobyt Starak - "+label).slice(0,60);
+}
+function ibanPretty(){ return IBAN.replace(/(.{4})/g,"$1 ").trim(); }
+var QR_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M20 14v.01M14 20v.01M20 20v.01M17 17v.01M20 17h.01M17 20h.01"/></svg>';
+
 function rodiny(){
   var map={}, order=[];
   guests.forEach(function(g){
@@ -426,7 +468,8 @@ function renderRozuctovani(){
     var c=document.createElement("div"); c.className="card pay row";
     c.innerHTML='<div><div class="nm">'+esc(r.label)+'</div>'+
       '<div class="sub">'+esc(r.clenove.join(", "))+'</div></div>'+
-      '<div class="amt tnum">'+kc(r.cena)+'</div>';
+      '<div class="pay-right"><div class="amt tnum">'+kc(r.cena)+'</div>'+
+      '<button class="qr-btn" data-am="'+r.cena+'" data-label="'+esc(r.label)+'" aria-label="QR platba">'+QR_SVG+'</button></div>';
     el.appendChild(c);
   });
 
@@ -435,9 +478,11 @@ function renderRozuctovani(){
   guests.slice().sort(function(a,b){return (a.okal+a.pokoj+a.jmeno).localeCompare(b.okal+b.pokoj+b.jmeno,"cs");})
   .forEach(function(g){
     var c=document.createElement("div"); c.className="card pay row";
+    var pol=cenaPolopenze(g);
     c.innerHTML='<div><div class="nm">'+esc(g.jmeno)+'</div>'+
       '<div class="sub">Pokoj '+esc(g.pokoj)+' · '+noci(g)+' nocí</div></div>'+
-      '<div class="amt tnum">'+kc(cenaPolopenze(g))+'</div>';
+      '<div class="pay-right"><div class="amt tnum">'+kc(pol)+'</div>'+
+      '<button class="qr-btn" data-am="'+pol+'" data-label="'+esc(g.jmeno)+'" aria-label="QR platba">'+QR_SVG+'</button></div>';
     el.appendChild(c);
   });
 }
@@ -495,6 +540,29 @@ document.querySelectorAll(".tab").forEach(function(t){
   t.addEventListener("click", function(){ showTab(t.dataset.tab); });
 });
 document.getElementById("refreshBtn").addEventListener("click", load);
+
+/* ---- QR modal ---- */
+function openQr(am, label){
+  var img=document.getElementById("qrImg"); img.innerHTML="";
+  var text=spd(am, label);
+  if(window.QRCode){
+    new QRCode(img, {text:text, width:220, height:220, correctLevel:QRCode.CorrectLevel.M});
+  } else {
+    img.textContent="QR se nepodařilo načíst.";
+  }
+  document.getElementById("qrAm").textContent=kc(am);
+  document.getElementById("qrMsg").textContent=label;
+  document.getElementById("qrAcc").textContent=ibanPretty();
+  document.getElementById("qrModal").hidden=false;
+}
+function closeQr(){ document.getElementById("qrModal").hidden=true; document.getElementById("qrImg").innerHTML=""; }
+document.addEventListener("click", function(e){
+  var btn=e.target.closest ? e.target.closest(".qr-btn") : null;
+  if(btn){ openQr(parseInt(btn.dataset.am,10)||0, btn.dataset.label||""); }
+});
+document.getElementById("qrClose").addEventListener("click", closeQr);
+document.getElementById("qrModal").addEventListener("click", function(e){ if(e.target.id==="qrModal") closeQr(); });
+document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeQr(); });
 
 var initial=(location.hash||"").slice(1);
 showTab(["rozuctovani","okalA","okalB","pivo"].indexOf(initial)>=0 ? initial : "rozuctovani");
