@@ -102,7 +102,8 @@
     color:var(--accent);margin:8px 2px 2px}
   .floor{display:flex;flex-direction:column;gap:8px}
   .grid{display:grid;gap:8px;align-items:stretch}
-  .spol-icons{display:inline-flex;align-items:center;gap:5px;color:var(--primary)}
+  .spol-icons{display:inline-flex;align-items:center;gap:5px;color:var(--primary);
+    border:1px solid color-mix(in srgb,var(--primary) 35%, var(--line));border-radius:20px;padding:2px 7px}
   .spol-ico{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .room{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px;
     display:flex;flex-direction:column;gap:3px;min-height:100%}
@@ -457,7 +458,8 @@ function renderOkaly(){
               '<span class="spol-icons" aria-label="Společenská místnost">'+
               '<svg class="spol-ico" viewBox="0 0 24 24"><path d="M6 8h9v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8Z"/><path d="M15 10h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2"/><path d="M6.5 8a2.5 2.5 0 1 1 3-3 2.2 2.2 0 0 1 3 .3"/></svg>'+
               '<svg class="spol-ico" viewBox="0 0 24 24"><path d="M8 22h8"/><path d="M7 10h10"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/></svg>'+
-              '<svg class="spol-ico" viewBox="0 0 24 24"><circle cx="8" cy="15.5" r="4.5"/><circle cx="8" cy="15.5" r="1.3"/><path d="M11.3 12.3 18.5 5"/><path d="M17.5 4l2.5 2.5"/></svg>'+
+              '<svg class="spol-ico" viewBox="0 0 24 24"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>'+
+              '<svg class="spol-ico" viewBox="0 0 24 24"><path d="M7 3v5a2 2 0 0 0 4 0V3"/><path d="M9 8v13"/><path d="M16.5 3c-1.6 1-2.5 2.9-2.5 5.2 0 1.9.9 3.1 2.5 3.4V21"/></svg>'+
               '</span></div>';
             grid.appendChild(spol); return;
           }
