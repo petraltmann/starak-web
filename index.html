@@ -407,22 +407,6 @@ function renderRozuctovani(){
     '<div class="total"><span class="k">Celkem polopenze</span><span class="v tnum">'+kc(cenaCelk)+'</span></div>';
   el.appendChild(sum);
 
-  var beer=document.createElement("div"); beer.className="card beer";
-  beer.innerHTML=
-    '<label for="beer">Celková částka za pivo (Kč)</label>'+
-    '<input id="beer" type="number" inputmode="numeric" value="'+castkaPivo+'" min="0" step="10">'+
-    '<div style="margin-top:10px">'+kv("Součet podílů", trimNum(sumaPodilu()))+
-    kv("Cena za podíl", kc(cenaZaPodil()))+'</div>';
-  el.appendChild(beer);
-  beer.querySelector("#beer").addEventListener("input", function(e){
-    castkaPivo = parseInt(e.target.value,10)||0;
-    // přepočítat jen odvozené části (beze ztráty fokusu)
-    beer.querySelectorAll(".kv .v")[0].textContent=trimNum(sumaPodilu());
-    beer.querySelectorAll(".kv .v")[1].textContent=kc(cenaZaPodil());
-    updatePayList();
-    renderSeznam();
-  });
-
   var ttl=document.createElement("div"); ttl.className="section-title"; ttl.textContent="Kdo kolik platí";
   el.appendChild(ttl);
   var list=document.createElement("div"); list.id="payList";
