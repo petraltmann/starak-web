@@ -569,9 +569,21 @@ function qrDataUrl(){
   var i=img.querySelector("img");
   return i ? i.src : "";
 }
-function saveQr(){
+async function saveQr(){
   var url=qrDataUrl(); if(!url) return;
-  var name=("qr-platba-"+ascii(qrCurrent.label)).replace(/\s+/g,"-").toLowerCase()+".png";
+  var name=("qr-platba-"+ascii(qrCurrent.label).toLowerCase().replace(/[^a-z0-9]+/g,"-")).replace(/-+$/,"")+".png";
+  // 1) V prostředí Claude Artifactu použij download capability.
+  if(window.claude && claude.use){
+    try{
+      var downloads=await claude.use("downloads");
+      if(downloads){
+        var blob=await (await fetch(url)).blob();
+        await downloads.save({filename:name, data:blob});
+      }
+    }catch(e){ /* odmítnuto/nedostupné */ }
+    return;
+  }
+  // 2) Běžné stažení (hostovaná stránka / prohlížeč).
   var a=document.createElement("a"); a.href=url; a.download=name;
   document.body.appendChild(a); a.click(); a.remove();
 }
