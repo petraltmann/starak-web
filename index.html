@@ -98,7 +98,12 @@
   .cap.over{color:var(--warn);font-weight:600}
   .floor-lbl{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
     color:var(--accent);margin:8px 2px 2px}
+  .floor{display:flex;flex-direction:column;gap:8px}
   .grid{display:grid;gap:8px;align-items:stretch}
+  .room.spol{align-items:flex-start;justify-content:center;gap:2px;
+    background:color-mix(in srgb,var(--accent) 13%, var(--surface-2));
+    border-color:color-mix(in srgb,var(--accent) 32%, var(--line))}
+  .room.spol .rl{font-family:var(--display);font-weight:700;font-size:15px}
   .room{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px;
     display:flex;flex-direction:column;gap:3px;min-height:100%}
   .room.empty-room{opacity:.5}
@@ -189,7 +194,7 @@ var OKAL_NAZEV = {A:"Okál A – vlevo", B:"Okál B – vpravo (večírkovací)"
 var PUDORYS = [
   {nazev:"Přízemí", rady:[["B","C","D"],["A",null,"E"]]},
   {nazev:"Patro", rady:[["F",null,"G"]]},
-  {nazev:"Suterén (společenská místnost)", rady:[["H"]]}
+  {nazev:"Suterén", rady:[["H","SPOL"]]}
 ];
 
 /* ---- Zabudovaný snímek (fallback, když nejdou živá data) ---- */
@@ -342,11 +347,17 @@ function renderOkaly(){
     PUDORYS.forEach(function(patro){
       var lbl=document.createElement("div"); lbl.className="floor-lbl";
       lbl.textContent=patro.nazev; el.appendChild(lbl);
+      var floor=document.createElement("div"); floor.className="floor";
       patro.rady.forEach(function(rada){
         var grid=document.createElement("div"); grid.className="grid";
-        grid.style.gridTemplateColumns="repeat("+rada.length+",1fr)";
+        grid.style.gridTemplateColumns=rada.map(function(s){return span(s)+"fr";}).join(" ");
         rada.forEach(function(slot){
           if(!slot){ var sp=document.createElement("div"); sp.className="spacer"; grid.appendChild(sp); return; }
+          if(slot==="SPOL"){
+            var spol=document.createElement("div"); spol.className="room spol";
+            spol.innerHTML='<div class="rl">Společenská místnost</div><div class="free">suterén</div>';
+            grid.appendChild(spol); return;
+          }
           var info=roomInfo(ok,slot);
           var over=info.osob>info.kap, free=info.lidi.length===0&&info.deti===0;
           var room=document.createElement("div");
@@ -358,8 +369,9 @@ function renderOkaly(){
             '<span class="oc tnum">'+info.osob+'/'+info.kap+'</span></div>'+who;
           grid.appendChild(room);
         });
-        el.appendChild(grid);
+        floor.appendChild(grid);
       });
+      el.appendChild(floor);
     });
   });
 }
@@ -436,6 +448,7 @@ function kvCap(k,o){
 function trimNum(n){ return (Math.round(n*100)/100).toString(); }
 function podily(n){ var k=Math.round(n); return k+" "+(k===1?"podíl":(k>=2&&k<=4?"podíly":"podílů")); }
 function pluralDeti(n){ var k=Math.round(n); return k+" "+(k===1?"dítě":(k>=2&&k<=4?"děti":"dětí")); }
+function span(slot){ return slot==="SPOL" ? 2 : 1; }
 
 function renderAll(){ renderRozuctovani(); renderOkaly(); renderPivo(); }
 
