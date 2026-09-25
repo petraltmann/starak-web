@@ -96,6 +96,7 @@
   .okal-head h2{font-size:18px;font-weight:700;color:var(--primary)}
   .cap{font-size:12px;color:var(--muted);white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
   .bed-ic{width:15px;height:15px;fill:currentColor;flex:0 0 auto}
+  .bed-ic-sm{width:12px;height:12px;fill:currentColor;flex:0 0 auto}
   .cap.over{color:var(--warn);font-weight:600}
   .floor-lbl{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
     color:var(--accent);margin:8px 2px 2px}
@@ -111,7 +112,7 @@
   .room.over{background:var(--warn-bg);border-color:color-mix(in srgb,var(--warn) 40%,var(--line))}
   .room .rh{display:flex;align-items:center;justify-content:space-between}
   .room .rl{font-family:var(--display);font-weight:700;font-size:16px}
-  .room .oc{font-size:11.5px;font-weight:600;color:var(--primary);
+  .room .oc{font-size:11.5px;font-weight:600;color:var(--primary);display:inline-flex;align-items:center;gap:3px;
     border:1px solid color-mix(in srgb,var(--primary) 35%,var(--line));border-radius:20px;padding:1px 7px}
   .room.over .oc{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,var(--line))}
   .room .who{font-size:12.5px;line-height:1.3}
@@ -440,7 +441,7 @@ function renderOkaly(){
     head.innerHTML='<h2>'+esc(OKAL_NAZEV[ok]||("Okál "+ok))+'</h2>'+
       '<span class="cap '+(osob>KAP_OKAL?"over":"")+' tnum">'+
       '<svg class="bed-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>'+
-      osob+' / '+KAP_OKAL+' lůžek</span>';
+      osob+' / '+KAP_OKAL+'</span>';
     el.appendChild(head);
     PUDORYS.forEach(function(patro){
       var lbl=document.createElement("div"); lbl.className="floor-lbl";
@@ -464,7 +465,7 @@ function renderOkaly(){
             : info.lidi.map(function(g){return '<div class="who">'+esc(g.jmeno)+'</div>';}).join("")
               + (info.deti>0?'<div class="kids">+ '+pluralDeti(info.deti)+'</div>':"");
           room.innerHTML='<div class="rh"><span class="rl">'+slot+'</span>'+
-            '<span class="oc tnum">'+info.osob+'/'+info.kap+'</span></div>'+who;
+            '<span class="oc tnum"><svg class="bed-ic-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>'+info.osob+'/'+info.kap+'</span></div>'+who;
           grid.appendChild(room);
         });
         floor.appendChild(grid);
