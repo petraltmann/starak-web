@@ -100,10 +100,11 @@
     color:var(--accent);margin:8px 2px 2px}
   .floor{display:flex;flex-direction:column;gap:8px}
   .grid{display:grid;gap:8px;align-items:stretch}
-  .room.spol{align-items:flex-start;justify-content:center;gap:2px;
+  .room.spol{align-items:center;justify-content:center;text-align:center;gap:6px;
     background:color-mix(in srgb,var(--accent) 13%, var(--surface-2));
     border-color:color-mix(in srgb,var(--accent) 32%, var(--line))}
   .room.spol .rl{font-family:var(--display);font-weight:700;font-size:15px}
+  .spol-ic{width:26px;height:26px;color:var(--accent);flex:0 0 auto}
   .room{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px;
     display:flex;flex-direction:column;gap:3px;min-height:100%}
   .room.empty-room{opacity:.5}
@@ -355,7 +356,7 @@ function renderOkaly(){
           if(!slot){ var sp=document.createElement("div"); sp.className="spacer"; grid.appendChild(sp); return; }
           if(slot==="SPOL"){
             var spol=document.createElement("div"); spol.className="room spol";
-            spol.innerHTML='<div class="rl">Společenská místnost</div><div class="free">suterén</div>';
+            spol.innerHTML='<svg class="spol-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3"/><path d="M2 12a2 2 0 0 1 2 2v3h16v-3a2 2 0 0 1 2-2 2 2 0 0 0-2-2 2 2 0 0 0-2 2v1H6v-1a2 2 0 0 0-2-2 2 2 0 0 0-2 2Z"/><path d="M5 17v2M19 17v2"/></svg><div class="rl">Společenská místnost</div>';
             grid.appendChild(spol); return;
           }
           var info=roomInfo(ok,slot);
