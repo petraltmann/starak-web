@@ -240,6 +240,7 @@
 var SHEET_ID = "1MoQwpQzF-Ir_6Ov-eKknX068iA_JhhzTgCdobXJc4rs";
 var POLOPENZE_DOSPELY = 670, POLOPENZE_DITE = 570, VYCHOZI_PIVO = 3600;
 var IBAN = "CZ9130300000003440689044"; // účet pro QR Platbu (3440689044/3030)
+var platbyPolopenze = true, platbyPivo = true; // flagy ze záložky Konstanty
 var CAP = {A:3,B:5,C:2,D:4,E:3,F:5,G:4,H:3};
 var KAP_OKAL = 29;
 var OKALY = ["A","B"];
@@ -313,11 +314,11 @@ function spd(am, label){
 function ibanPretty(){ return IBAN.replace(/(.{4})/g,"$1 ").trim(); }
 var QR_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M20 14v.01M14 20v.01M20 20v.01M17 17v.01M20 17h.01M17 20h.01"/></svg>';
 var CHECK_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>';
-function payRight(paid, am, label){
+function payRight(paid, am, label, allowQr){
   var amt='<div class="amt tnum'+(paid?' paid':'')+'">'+kc(am)+'</div>';
   var ctrl = paid
     ? '<span class="paid-mark" title="Zaplaceno" aria-label="Zaplaceno">'+CHECK_SVG+'</span>'
-    : '<button class="qr-btn" data-am="'+am+'" data-label="'+esc(label)+'" aria-label="QR platba">'+QR_SVG+'</button>';
+    : (allowQr ? '<button class="qr-btn" data-am="'+am+'" data-label="'+esc(label)+'" aria-label="QR platba">'+QR_SVG+'</button>' : '');
   return '<div class="pay-right">'+amt+ctrl+'</div>';
 }
 
@@ -407,8 +408,31 @@ function loadLive(cb){
   s.onerror=function(){ if(!done){done=true;clearTimeout(timer);cleanup();cb(null);} };
   s.src=url; document.head.appendChild(s);
 }
+function applyKonstanty(resp){
+  var rows=resp.table.rows||[];
+  for(var i=0;i<rows.length;i++){
+    var c=rows[i].c||[];
+    var label=c[0]&&c[0].v!=null?String(c[0].v).trim().toLowerCase():"";
+    var v=c[1]?c[1].v:null;
+    var b=(v===true)||(typeof v==="string"&&v.trim().toUpperCase()==="TRUE")||v===1||v==="1";
+    if(label==="platby") platbyPolopenze=b;
+    else if(label==="platby pivo") platbyPivo=b;
+  }
+}
+function loadKonstanty(cb){
+  var fn="__starakK_"+Date.now();
+  var url="https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/gviz/tq?sheet=Konstanty&tqx=out:json;responseHandler:"+fn;
+  var done=false, s=document.createElement("script");
+  function cleanup(){ try{delete window[fn];}catch(e){} if(s.parentNode) s.parentNode.removeChild(s); }
+  var timer=setTimeout(function(){ if(!done){done=true;cleanup();cb();} }, 5000);
+  window[fn]=function(resp){ if(done) return; done=true; clearTimeout(timer); cleanup();
+    try{ applyKonstanty(resp); }catch(e){} cb(); };
+  s.onerror=function(){ if(!done){done=true;clearTimeout(timer);cleanup();cb();} };
+  s.src=url; document.head.appendChild(s);
+}
 function load(){
   setStatus("", "Načítám živá data…");
+  loadKonstanty(function(){
   loadLive(function(live){
     if(live && live.length){
       guests=live;
@@ -420,6 +444,7 @@ function load(){
       setStatus("snap","Offline snímek · data k "+SNAP_DATE);
     }
     renderAll();
+  });
   });
 }
 
@@ -459,7 +484,6 @@ function renderOkaly(){
               '<svg class="spol-ico" viewBox="0 0 24 24"><path d="M6 8h9v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8Z"/><path d="M15 10h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2"/><path d="M6.5 8a2.5 2.5 0 1 1 3-3 2.2 2.2 0 0 1 3 .3"/></svg>'+
               '<svg class="spol-ico" viewBox="0 0 24 24"><path d="M8 22h8"/><path d="M7 10h10"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/></svg>'+
               '<svg class="spol-ico" viewBox="0 0 24 24"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>'+
-              '<svg class="spol-ico" viewBox="0 0 24 24"><path d="M7 3v5a2 2 0 0 0 4 0V3"/><path d="M9 8v13"/><path d="M16.5 3c-1.6 1-2.5 2.9-2.5 5.2 0 1.9.9 3.1 2.5 3.4V21"/></svg>'+
               '</span></div>';
             grid.appendChild(spol); return;
           }
@@ -517,7 +541,7 @@ function renderRozuctovani(){
     var c=document.createElement("div"); c.className="card pay row";
     c.innerHTML='<div><div class="nm">'+esc(r.label)+'</div>'+
       '<div class="sub">'+joinA(items)+'</div></div>'+
-      payRight(r.zaplaceno, r.cena, r.label);
+      payRight(r.zaplaceno, r.cena, r.label, platbyPolopenze);
     el.appendChild(c);
   });
 
@@ -529,7 +553,7 @@ function renderRozuctovani(){
     var pol=cenaPolopenze(g);
     c.innerHTML='<div><div class="nm">'+esc(g.jmeno)+'</div>'+
       '<div class="sub">Pokoj '+esc(g.pokoj)+' · '+noci(g)+' nocí</div></div>'+
-      payRight(g.zapPolopenze, pol, g.jmeno);
+      payRight(g.zapPolopenze, pol, g.jmeno, platbyPolopenze);
     el.appendChild(c);
   });
 }
@@ -556,7 +580,7 @@ function renderPivo(){
     var pv=pivoOsoby(g);
     c.innerHTML='<div><div class="nm">'+esc(g.jmeno)+'</div>'+
       '<div class="sub">'+podily(g.konz)+'</div></div>'+
-      payRight(g.zapPivo, pv, g.jmeno+' (pivo)');
+      payRight(g.zapPivo, pv, g.jmeno+' (pivo)', platbyPivo);
     el.appendChild(c);
   });
 }
