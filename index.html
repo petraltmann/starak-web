@@ -325,9 +325,10 @@ function rodiny(){
   guests.forEach(function(g){
     if(!(g.rodina&&g.rodina.trim())) return; // bez vyplněné rodiny se nezobrazuje
     var label=g.rodina.trim(), key="R:"+label;
-    if(!map[key]){ map[key]={label:label, clenove:[], cena:0, zaplaceno:true}; order.push(key); }
+    if(!map[key]){ map[key]={label:label, clenove:[], cena:0, deti:0, zaplaceno:true}; order.push(key); }
     map[key].clenove.push(g.jmeno);
     map[key].cena+=cenaPolopenze(g);
+    map[key].deti+=g.deti;
     map[key].zaplaceno = map[key].zaplaceno && !!g.zapPolopenze;
   });
   return order.map(function(k){return map[k];})
@@ -503,7 +504,7 @@ function renderRozuctovani(){
   rodiny().forEach(function(r){
     var c=document.createElement("div"); c.className="card pay row";
     c.innerHTML='<div><div class="nm">'+esc(r.label)+'</div>'+
-      '<div class="sub">'+esc(r.clenove.join(", "))+'</div></div>'+
+      '<div class="sub">'+esc(r.clenove.join(", "))+(r.deti>0?' · '+pluralDeti(r.deti):'')+'</div></div>'+
       payRight(r.zaplaceno, r.cena, r.label);
     el.appendChild(c);
   });
