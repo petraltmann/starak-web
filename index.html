@@ -510,9 +510,11 @@ function renderPivo(){
   }
   payers.forEach(function(g){
     var c=document.createElement("div"); c.className="card pay row";
+    var pv=pivoOsoby(g);
     c.innerHTML='<div><div class="nm">'+esc(g.jmeno)+'</div>'+
       '<div class="sub">'+podily(g.konz)+'</div></div>'+
-      '<div class="amt tnum">'+kc(pivoOsoby(g))+'</div>';
+      '<div class="pay-right"><div class="amt tnum">'+kc(pv)+'</div>'+
+      '<button class="qr-btn" data-am="'+pv+'" data-label="'+esc(g.jmeno)+' (pivo)" aria-label="QR platba">'+QR_SVG+'</button></div>';
     el.appendChild(c);
   });
 }
