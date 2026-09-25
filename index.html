@@ -502,9 +502,11 @@ function renderRozuctovani(){
   var rt=document.createElement("div"); rt.className="section-title"; rt.textContent="Polopenze po rodinách";
   el.appendChild(rt);
   rodiny().forEach(function(r){
+    var items=r.clenove.map(esc);
+    if(r.deti>0) items.push(pluralDeti(r.deti));
     var c=document.createElement("div"); c.className="card pay row";
     c.innerHTML='<div><div class="nm">'+esc(r.label)+'</div>'+
-      '<div class="sub">'+esc(r.clenove.join(", "))+(r.deti>0?' · '+pluralDeti(r.deti):'')+'</div></div>'+
+      '<div class="sub">'+joinA(items)+'</div></div>'+
       payRight(r.zaplaceno, r.cena, r.label);
     el.appendChild(c);
   });
@@ -557,6 +559,7 @@ function kvCap(k,o){
 function trimNum(n){ return (Math.round(n*100)/100).toString(); }
 function podily(n){ var k=Math.round(n); return k+" "+(k===1?"podíl":(k>=2&&k<=4?"podíly":"podílů")); }
 function pluralDeti(n){ var k=Math.round(n); return k+" "+(k===1?"dítě":(k>=2&&k<=4?"děti":"dětí")); }
+function joinA(arr){ return arr.length<=1 ? arr.join("") : arr.slice(0,-1).join(", ")+" a "+arr[arr.length-1]; }
 function span(slot){ return slot==="SPOL" ? 2 : 1; }
 
 function renderVecere(){
