@@ -104,7 +104,8 @@
   .grid{display:grid;gap:8px;align-items:stretch}
   .room.spol{background:color-mix(in srgb,var(--accent) 13%, var(--surface-2));
     border-color:color-mix(in srgb,var(--accent) 32%, var(--line))}
-  .spol-icons{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;font-size:24px;line-height:1}
+  .spol-icons{display:inline-flex;align-items:center;gap:5px;color:var(--accent)}
+  .spol-ico{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .room{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px;
     display:flex;flex-direction:column;gap:3px;min-height:100%}
   .room.empty-room{opacity:.5}
@@ -454,8 +455,12 @@ function renderOkaly(){
           if(slot==="SPOL"){
             var spol=document.createElement("div"); spol.className="room spol";
             spol.title="Společenská místnost";
-            spol.innerHTML='<div class="rh"><span class="rl">S</span></div>'+
-              '<div class="spol-icons" aria-label="Společenská místnost">🍺 🍷 🎸</div>';
+            spol.innerHTML='<div class="rh"><span class="rl">S</span>'+
+              '<span class="spol-icons" aria-label="Společenská místnost">'+
+              '<svg class="spol-ico" viewBox="0 0 24 24"><path d="M6 8h9v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8Z"/><path d="M15 10h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2"/><path d="M6.5 8a2.5 2.5 0 1 1 3-3 2.2 2.2 0 0 1 3 .3"/></svg>'+
+              '<svg class="spol-ico" viewBox="0 0 24 24"><path d="M8 22h8"/><path d="M7 10h10"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/></svg>'+
+              '<svg class="spol-ico" viewBox="0 0 24 24"><circle cx="8" cy="15.5" r="4.5"/><circle cx="8" cy="15.5" r="1.3"/><path d="M11.3 12.3 18.5 5"/><path d="M17.5 4l2.5 2.5"/></svg>'+
+              '</span></div>';
             grid.appendChild(spol); return;
           }
           var info=roomInfo(ok,slot);
