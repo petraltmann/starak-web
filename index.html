@@ -715,6 +715,7 @@ document.addEventListener("keydown", function(e){ if(e.key==="Escape"){ closeQr(
 /* ---- Přidat na plochu (klik na domeček) ---- */
 var deferredPrompt=null;
 window.addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); deferredPrompt=e; });
+if("serviceWorker" in navigator){ try{ navigator.serviceWorker.register("sw.js").catch(function(){}); }catch(e){} }
 function isStandalone(){ return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone===true; }
 function isIos(){ return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1); }
 function showA2HS(){
