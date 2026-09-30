@@ -1,5 +1,5 @@
 /* Service worker pro Starák – umožňuje instalaci PWA a offline režim. */
-var CACHE = 'starak-v2';
+var CACHE = 'starak-v3';
 self.addEventListener('install', function(e){ self.skipWaiting(); });
 self.addEventListener('activate', function(e){
   e.waitUntil(

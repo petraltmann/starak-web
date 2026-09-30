@@ -2,12 +2,12 @@
 <html lang="cs">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#2E7D32">
+<meta name="theme-color" content="#35597E">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Starák">
-<link rel="apple-touch-icon" href="icon-180-v2.png">
-<link rel="manifest" href="manifest.webmanifest?v=2">
+<link rel="apple-touch-icon" href="icon-180-v3.png">
+<link rel="manifest" href="manifest.webmanifest?v=3">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html,body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Starák</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -210,7 +210,7 @@
       <span class="lbl">Rozúčtování</span></button>
     <button class="tab" role="tab" data-tab="vecere" aria-selected="false">
       <svg class="ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>
-      <span class="lbl">1. večeře</span></button>
+      <span class="lbl">Stravování</span></button>
     <button class="tab" role="tab" data-tab="okalA" aria-selected="false">
       <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11 12 4l9 7M5 10v10h14V10"/></svg>
       <span class="lbl lbl-keep">A</span></button>
@@ -220,6 +220,9 @@
     <button class="tab" role="tab" data-tab="pivo" aria-selected="false">
       <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h9v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8Z"/><path d="M15 10h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2"/><path d="M6.5 8a2.5 2.5 0 1 1 3-3 2.2 2.2 0 0 1 3 .3"/></svg>
       <span class="lbl">Pivo</span></button>
+    <button class="tab" role="tab" data-tab="pocasi" aria-selected="false">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16a4 4 0 0 1-.5-7.97 5 5 0 0 1 9.7-1.02A3.5 3.5 0 0 1 17 16H7Z"/><path d="M8 20v.01M12 20.5v.01M16 20v.01"/></svg>
+      <span class="lbl">Počasí</span></button>
   </nav>
 </header>
 
@@ -229,6 +232,7 @@
   <section id="panel-okalB" role="tabpanel" hidden></section>
   <section id="panel-pivo" role="tabpanel" hidden></section>
   <section id="panel-vecere" role="tabpanel" hidden></section>
+  <section id="panel-pocasi" role="tabpanel" hidden></section>
 </main>
 
 <div id="qrModal" class="qr-modal" hidden>
@@ -650,7 +654,7 @@ function showTab(name){
   document.querySelectorAll(".tab").forEach(function(t){
     t.setAttribute("aria-selected", t.dataset.tab===name ? "true":"false");
   });
-  ["rozuctovani","okalA","okalB","pivo","vecere"].forEach(function(n){
+  ["rozuctovani","okalA","okalB","pivo","vecere","pocasi"].forEach(function(n){
     document.getElementById("panel-"+n).hidden = (n!==name);
   });
   try{ if(location.hash.slice(1)!==name) history.replaceState(null,"","#"+name); }catch(e){}
@@ -659,7 +663,7 @@ function showTab(name){
 document.querySelectorAll(".tab").forEach(function(t){
   t.addEventListener("click", function(){ showTab(t.dataset.tab); });
 });
-document.getElementById("refreshBtn").addEventListener("click", load);
+document.getElementById("refreshBtn").addEventListener("click", function(){ load(); loadPocasi(); });
 
 /* ---- QR modal ---- */
 var qrCurrent={am:0,label:""};
@@ -741,7 +745,177 @@ document.getElementById("homeBtn").addEventListener("click", function(){
 document.getElementById("a2hsClose").addEventListener("click", closeA2HS);
 document.getElementById("a2hsModal").addEventListener("click", function(e){ if(e.target.id==="a2hsModal") closeA2HS(); });
 
+/* ---- Počasí (Open-Meteo, bez klíče, CORS) ---- */
+var WX_LAT=50.166, WX_LON=16.938, WX_NAME="Staré Město pod Sněžníkem";
+function wxIco(k){
+  var p={
+    sun:'<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/>',
+    part:'<circle cx="8.5" cy="8" r="3"/><path d="M8.5 1.8v1.6M2.3 8h1.6M4.2 3.7l1.1 1.1M12.8 3.7 11.7 4.8"/><path d="M17 20a4 4 0 0 0 .5-7.97A5 5 0 0 0 8 12.5"/><path d="M7.5 20a3.2 3.2 0 0 1-.2-6.39"/>',
+    cloud:'<path d="M7 18a4 4 0 0 1-.5-7.97 5 5 0 0 1 9.7-1.02A3.5 3.5 0 0 1 17 18H7Z"/>',
+    fog:'<path d="M6 10.5a4 4 0 0 1 7.6-1.7A3 3 0 0 1 17 11"/><path d="M4 15h13M6 18.5h12M5 21.5h9"/>',
+    rain:'<path d="M7 15a4 4 0 0 1-.5-7.97 5 5 0 0 1 9.7-1.02A3.5 3.5 0 0 1 17 15H7Z"/><path d="M8 18l-1 2.5M12 18l-1 2.5M16 18l-1 2.5"/>',
+    snow:'<path d="M7 14a4 4 0 0 1-.5-7.97 5 5 0 0 1 9.7-1.02A3.5 3.5 0 0 1 17 14H7Z"/><path d="M8 18v.01M8 20.5v.01M12 18.5v.01M12 21v.01M16 18v.01M16 20.5v.01"/>',
+    sleet:'<path d="M7 14a4 4 0 0 1-.5-7.97 5 5 0 0 1 9.7-1.02A3.5 3.5 0 0 1 17 14H7Z"/><path d="M8 18l-1 2.3M15 18l-1 2.3M12 18.5v.01M12 21v.01"/>',
+    storm:'<path d="M7 14a4 4 0 0 1-.5-7.97 5 5 0 0 1 9.7-1.02A3.5 3.5 0 0 1 17 14H7Z"/><path d="M13 15l-3 4h3l-1 3"/>'
+  };
+  return '<svg class="wx-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(p[k]||p.cloud)+'</svg>';
+}
+function wCode(c){
+  if(c===0) return {t:"Jasno", i:"sun"};
+  if(c===1) return {t:"Skoro jasno", i:"part"};
+  if(c===2) return {t:"Polojasno", i:"part"};
+  if(c===3) return {t:"Zataženo", i:"cloud"};
+  if(c===45||c===48) return {t:"Mlha", i:"fog"};
+  if(c>=51&&c<=55) return {t:"Mrholení", i:"rain"};
+  if(c===56||c===57) return {t:"Namrzající mrholení", i:"sleet"};
+  if(c>=61&&c<=65) return {t:"Déšť", i:"rain"};
+  if(c===66||c===67) return {t:"Namrzající déšť", i:"sleet"};
+  if(c>=71&&c<=75) return {t:"Sněžení", i:"snow"};
+  if(c===77) return {t:"Sněhové krupky", i:"snow"};
+  if(c>=80&&c<=82) return {t:"Přeháňky", i:"rain"};
+  if(c===85||c===86) return {t:"Sněhové přeháňky", i:"snow"};
+  if(c===95) return {t:"Bouřka", i:"storm"};
+  if(c===96||c===99) return {t:"Bouřka s kroupami", i:"storm"};
+  return {t:"—", i:"cloud"};
+}
+var WX_DNY=["Ne","Po","Út","St","Čt","Pá","So"];
+function wxDay(iso, idx){
+  var d=new Date(iso+"T00:00:00");
+  if(idx===0) return "Dnes";
+  if(idx===1) return "Zítra";
+  return WX_DNY[d.getDay()];
+}
+function wxTemp(v){ return (v==null?"—":Math.round(v))+"°"; }
+function loadPocasi(){
+  var el=document.getElementById("panel-pocasi");
+  if(el && !el.dataset.loaded) el.innerHTML='<div class="card wx-msg">Načítám počasí…</div>';
+  var url="https://api.open-meteo.com/v1/forecast?latitude="+WX_LAT+"&longitude="+WX_LON+
+    "&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,snowfall"+
+    "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,snowfall_sum"+
+    "&timezone=Europe%2FPrague&forecast_days=6";
+  fetch(url).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(d){ renderPocasi(d); })
+    .catch(function(){
+      var e=document.getElementById("panel-pocasi");
+      if(e) e.innerHTML='<div class="card wx-msg">⚠ Počasí se nepodařilo načíst. Zkus obnovit ↻</div>';
+    });
+}
+function renderPocasi(d){
+  var el=document.getElementById("panel-pocasi"); if(!el) return;
+  el.dataset.loaded="1";
+  var cur=d.current||{}, day=d.daily||{};
+  var cw=wCode(cur.weather_code);
+  var now='<div class="card wx-now">'+
+    '<div class="wx-loc">'+esc(WX_NAME)+'</div>'+
+    '<div class="wx-cur">'+
+      '<span class="wx-cur-ico">'+wxIco(cw.i)+'</span>'+
+      '<span class="wx-cur-t tnum">'+wxTemp(cur.temperature_2m)+'</span>'+
+    '</div>'+
+    '<div class="wx-cur-desc">'+cw.t+'</div>'+
+    '<div class="wx-meta">'+
+      '<span>Pocitově <b class="tnum">'+wxTemp(cur.apparent_temperature)+'</b></span>'+
+      '<span>Vítr <b class="tnum">'+(cur.wind_speed_10m==null?"—":Math.round(cur.wind_speed_10m))+' km/h</b></span>'+
+      '<span>Vlhkost <b class="tnum">'+(cur.relative_humidity_2m==null?"—":cur.relative_humidity_2m)+' %</b></span>'+
+    '</div>'+
+  '</div>';
+  var rows="";
+  var t=day.time||[];
+  for(var i=0;i<t.length;i++){
+    var wc=wCode((day.weather_code||[])[i]);
+    var sn=(day.snowfall_sum||[])[i];
+    var snStr = (sn!=null && sn>0) ? '<span class="wx-snow tnum">❄ '+(Math.round(sn*10)/10)+' cm</span>' : '';
+    rows+='<div class="wx-day">'+
+      '<span class="wx-dname">'+wxDay(t[i], i)+'</span>'+
+      '<span class="wx-dico">'+wxIco(wc.i)+'</span>'+
+      '<span class="wx-ddesc">'+wc.t+snStr+'</span>'+
+      '<span class="wx-drange tnum"><b>'+wxTemp((day.temperature_2m_max||[])[i])+'</b>'+
+        ' <em>'+wxTemp((day.temperature_2m_min||[])[i])+'</em></span>'+
+    '</div>';
+  }
+  var fc='<div class="section-title">Předpověď</div><div class="card wx-days">'+rows+'</div>';
+  el.innerHTML=now+fc;
+}
+
 var initial=(location.hash||"").slice(1);
-showTab(["rozuctovani","okalA","okalB","pivo","vecere"].indexOf(initial)>=0 ? initial : "rozuctovani");
+showTab(["rozuctovani","okalA","okalB","pivo","vecere","pocasi"].indexOf(initial)>=0 ? initial : "rozuctovani");
 load();
+loadPocasi();
 </script>
+<style id="winter-override">
+  /* ===== Zimní schéma – šedomodrá / stříbrná (náhled) ===== */
+  :root{
+    --ground:#EAEFF5; --surface:#FCFDFF; --surface-2:#DFE6EF; --raise:#F4F7FB;
+    --ink:#1D2836; --muted:#5A6879; --faint:#94A1B1; --line:#D0D9E4;
+    --primary:#35597E; --primary-strong:#264363; --on-primary:#FFFFFF;
+    --accent:#4E7C93; --child:#B26A34; --warn:#C0392B; --warn-bg:#F6E1DE;
+    --ok:#3F7A6B;
+    --shadow:0 1px 2px rgba(30,45,65,.08), 0 6px 20px rgba(40,70,110,.09);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme:dark;
+      --ground:#121821; --surface:#1B2430; --surface-2:#25303D; --raise:#1F2A37;
+      --ink:#E7ECF3; --muted:#9AA7B7; --faint:#5E6C7D; --line:#333F4E;
+      --primary:#9DB8D6; --primary-strong:#C2D3E8; --on-primary:#0E1721;
+      --accent:#79A6BC; --child:#D69A63; --warn:#F0776E; --warn-bg:#3A2020;
+      --ok:#79B7A6;
+      --shadow:0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --ground:#121821; --surface:#1B2430; --surface-2:#25303D; --raise:#1F2A37;
+    --ink:#E7ECF3; --muted:#9AA7B7; --faint:#5E6C7D; --line:#333F4E;
+    --primary:#9DB8D6; --primary-strong:#C2D3E8; --on-primary:#0E1721;
+    --accent:#79A6BC; --child:#D69A63; --warn:#F0776E; --warn-bg:#3A2020;
+    --ok:#79B7A6;
+  }
+  /* mrazivé záhlaví – jemný stříbrný přeliv */
+  .top{
+    background:linear-gradient(180deg,
+      color-mix(in srgb,var(--primary) 12%, var(--ground)) 0%,
+      color-mix(in srgb,var(--ground) 90%, transparent) 100%) !important;
+  }
+  /* statická textura vloček – husté pozadí (bez animace) */
+  body{
+    background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27120%27%20height%3D%27120%27%20viewBox%3D%270%200%20120%20120%27%3E%3Cdefs%3E%3Cg%20id%3D%27f%27%20stroke-linecap%3D%27round%27%3E%3Cline%20x1%3D%270%27%20y1%3D%27-7%27%20x2%3D%270%27%20y2%3D%277%27%2F%3E%3Cline%20x1%3D%27-6.1%27%20y1%3D%27-3.5%27%20x2%3D%276.1%27%20y2%3D%273.5%27%2F%3E%3Cline%20x1%3D%27-6.1%27%20y1%3D%273.5%27%20x2%3D%276.1%27%20y2%3D%27-3.5%27%2F%3E%3Cline%20x1%3D%270%27%20y1%3D%27-7%27%20x2%3D%27-2%27%20y2%3D%27-5%27%2F%3E%3Cline%20x1%3D%270%27%20y1%3D%27-7%27%20x2%3D%272%27%20y2%3D%27-5%27%2F%3E%3Cline%20x1%3D%270%27%20y1%3D%277%27%20x2%3D%27-2%27%20y2%3D%275%27%2F%3E%3Cline%20x1%3D%270%27%20y1%3D%277%27%20x2%3D%272%27%20y2%3D%275%27%2F%3E%3C%2Fg%3E%3C%2Fdefs%3E%3Cg%20stroke%3D%27%239DB0C8%27%20stroke-width%3D%271.15%27%20fill%3D%27none%27%20opacity%3D%270.55%27%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2815%2C14%29%20rotate%2810%29%20scale%280.7%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2852%2C24%29%20rotate%28-20%29%20scale%280.55%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2890%2C12%29%20rotate%2818%29%20scale%280.75%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%28112%2C40%29%20rotate%280%29%20scale%280.5%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2830%2C48%29%20rotate%2825%29%20scale%280.9%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2870%2C54%29%20rotate%28-12%29%20scale%280.6%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%28100%2C70%29%20rotate%288%29%20scale%280.8%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2816%2C80%29%20rotate%28-8%29%20scale%280.65%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2848%2C88%29%20rotate%2815%29%20scale%280.85%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2884%2C100%29%20rotate%28-22%29%20scale%280.7%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%28112%2C108%29%20rotate%2812%29%20scale%280.55%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2834%2C112%29%20rotate%285%29%20scale%280.6%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2866%2C16%29%20rotate%2830%29%20scale%280.5%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2810%2C44%29%20rotate%28-15%29%20scale%280.5%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%28120%2C86%29%20rotate%2820%29%20scale%280.6%29%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+    background-repeat:repeat;
+    background-size:120px 120px;
+    background-attachment:fixed;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) body{
+      background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27120%27%20height%3D%27120%27%20viewBox%3D%270%200%20120%20120%27%3E%3Cdefs%3E%3Cg%20id%3D%27f%27%20stroke-linecap%3D%27round%27%3E%3Cline%20x1%3D%270%27%20y1%3D%27-7%27%20x2%3D%270%27%20y2%3D%277%27%2F%3E%3Cline%20x1%3D%27-6.1%27%20y1%3D%27-3.5%27%20x2%3D%276.1%27%20y2%3D%273.5%27%2F%3E%3Cline%20x1%3D%27-6.1%27%20y1%3D%273.5%27%20x2%3D%276.1%27%20y2%3D%27-3.5%27%2F%3E%3Cline%20x1%3D%270%27%20y1%3D%27-7%27%20x2%3D%27-2%27%20y2%3D%27-5%27%2F%3E%3Cline%20x1%3D%270%27%20y1%3D%27-7%27%20x2%3D%272%27%20y2%3D%27-5%27%2F%3E%3Cline%20x1%3D%270%27%20y1%3D%277%27%20x2%3D%27-2%27%20y2%3D%275%27%2F%3E%3Cline%20x1%3D%270%27%20y1%3D%277%27%20x2%3D%272%27%20y2%3D%275%27%2F%3E%3C%2Fg%3E%3C%2Fdefs%3E%3Cg%20stroke%3D%27%23E2EAF5%27%20stroke-width%3D%271.15%27%20fill%3D%27none%27%20opacity%3D%270.18%27%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2815%2C14%29%20rotate%2810%29%20scale%280.7%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2852%2C24%29%20rotate%28-20%29%20scale%280.55%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2890%2C12%29%20rotate%2818%29%20scale%280.75%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%28112%2C40%29%20rotate%280%29%20scale%280.5%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2830%2C48%29%20rotate%2825%29%20scale%280.9%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2870%2C54%29%20rotate%28-12%29%20scale%280.6%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%28100%2C70%29%20rotate%288%29%20scale%280.8%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2816%2C80%29%20rotate%28-8%29%20scale%280.65%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2848%2C88%29%20rotate%2815%29%20scale%280.85%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2884%2C100%29%20rotate%28-22%29%20scale%280.7%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%28112%2C108%29%20rotate%2812%29%20scale%280.55%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2834%2C112%29%20rotate%285%29%20scale%280.6%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2866%2C16%29%20rotate%2830%29%20scale%280.5%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2810%2C44%29%20rotate%28-15%29%20scale%280.5%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%28120%2C86%29%20rotate%2820%29%20scale%280.6%29%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+    }
+  }
+  :root[data-theme="dark"] body{
+    background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27120%27%20height%3D%27120%27%20viewBox%3D%270%200%20120%20120%27%3E%3Cdefs%3E%3Cg%20id%3D%27f%27%20stroke-linecap%3D%27round%27%3E%3Cline%20x1%3D%270%27%20y1%3D%27-7%27%20x2%3D%270%27%20y2%3D%277%27%2F%3E%3Cline%20x1%3D%27-6.1%27%20y1%3D%27-3.5%27%20x2%3D%276.1%27%20y2%3D%273.5%27%2F%3E%3Cline%20x1%3D%27-6.1%27%20y1%3D%273.5%27%20x2%3D%276.1%27%20y2%3D%27-3.5%27%2F%3E%3Cline%20x1%3D%270%27%20y1%3D%27-7%27%20x2%3D%27-2%27%20y2%3D%27-5%27%2F%3E%3Cline%20x1%3D%270%27%20y1%3D%27-7%27%20x2%3D%272%27%20y2%3D%27-5%27%2F%3E%3Cline%20x1%3D%270%27%20y1%3D%277%27%20x2%3D%27-2%27%20y2%3D%275%27%2F%3E%3Cline%20x1%3D%270%27%20y1%3D%277%27%20x2%3D%272%27%20y2%3D%275%27%2F%3E%3C%2Fg%3E%3C%2Fdefs%3E%3Cg%20stroke%3D%27%23E2EAF5%27%20stroke-width%3D%271.15%27%20fill%3D%27none%27%20opacity%3D%270.18%27%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2815%2C14%29%20rotate%2810%29%20scale%280.7%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2852%2C24%29%20rotate%28-20%29%20scale%280.55%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2890%2C12%29%20rotate%2818%29%20scale%280.75%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%28112%2C40%29%20rotate%280%29%20scale%280.5%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2830%2C48%29%20rotate%2825%29%20scale%280.9%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2870%2C54%29%20rotate%28-12%29%20scale%280.6%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%28100%2C70%29%20rotate%288%29%20scale%280.8%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2816%2C80%29%20rotate%28-8%29%20scale%280.65%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2848%2C88%29%20rotate%2815%29%20scale%280.85%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2884%2C100%29%20rotate%28-22%29%20scale%280.7%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%28112%2C108%29%20rotate%2812%29%20scale%280.55%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2834%2C112%29%20rotate%285%29%20scale%280.6%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2866%2C16%29%20rotate%2830%29%20scale%280.5%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%2810%2C44%29%20rotate%28-15%29%20scale%280.5%29%27%2F%3E%3Cuse%20href%3D%27%23f%27%20transform%3D%27translate%28120%2C86%29%20rotate%2820%29%20scale%280.6%29%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+  }
+  /* ===== Počasí ===== */
+  .wx-msg{padding:18px 16px;color:var(--muted);text-align:center;}
+  .wx-now{padding:18px 16px;text-align:center;
+    background:linear-gradient(160deg,
+      color-mix(in srgb,var(--primary) 16%, var(--surface)) 0%,
+      var(--surface) 60%) !important;}
+  .wx-loc{font-size:14px;font-weight:600;color:var(--muted);}
+  .wx-cur{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:4px;}
+  .wx-cur-ico{color:var(--primary);}
+  .wx-cur-ico .wx-svg{width:56px;height:56px;display:block;}
+  .wx-cur-t{font-size:52px;font-weight:800;line-height:1;color:var(--ink);letter-spacing:-1px;}
+  .wx-cur-desc{font-size:16px;font-weight:600;color:var(--ink);margin-top:2px;}
+  .wx-meta{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;margin-top:12px;
+    font-size:13px;color:var(--muted);}
+  .wx-meta b{color:var(--ink);font-weight:600;}
+  .wx-days{padding:4px 4px;}
+  .wx-day{display:grid;grid-template-columns:44px 34px 1fr auto;align-items:center;gap:8px;
+    padding:9px 12px;border-bottom:1px solid var(--line);}
+  .wx-day:last-child{border-bottom:0;}
+  .wx-dname{font-weight:600;color:var(--ink);font-size:14px;}
+  .wx-dico{color:var(--primary);}
+  .wx-dico .wx-svg{width:26px;height:26px;display:block;}
+  .wx-ddesc{color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:1px;}
+  .wx-snow{color:var(--accent);font-size:12px;font-weight:600;}
+  .wx-drange{font-size:15px;white-space:nowrap;}
+  .wx-drange b{color:var(--ink);font-weight:700;}
+  .wx-drange em{color:var(--muted);font-style:normal;font-weight:500;}
+</style>
