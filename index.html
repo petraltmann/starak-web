@@ -792,7 +792,7 @@ function loadPocasi(){
   var url="https://api.open-meteo.com/v1/forecast?latitude="+WX_LAT+"&longitude="+WX_LON+
     "&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,snowfall"+
     "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,snowfall_sum"+
-    "&timezone=Europe%2FPrague&forecast_days=6";
+    "&timezone=Europe%2FPrague&forecast_days=4";
   fetch(url).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
     .then(function(d){ renderPocasi(d); })
     .catch(function(){
@@ -833,8 +833,65 @@ function renderPocasi(d){
     '</div>';
   }
   var fc='<div class="section-title">Předpověď</div><div class="card wx-days">'+rows+'</div>';
-  el.innerHTML=now+fc;
+  el.innerHTML=now+fc+webkameryHtml();
+  refreshCams();
 }
+
+/* ---- Webkamery okolních areálů ---- */
+var WEBKAMERY=[
+  {areal:"Paprsek", odkaz:"https://www.paprsek.cz/kamery-zive-zabery/", kamery:[
+    {label:"Kamera 1", url:"https://g0.ipcamlive.com/player/snapshot.php?alias=6a2241bfdbaa5"},
+    {label:"Kamera 2", url:"https://g0.ipcamlive.com/player/snapshot.php?alias=6a226df41f916"},
+    {label:"Kamera 3", url:"https://g0.ipcamlive.com/player/snapshot.php?alias=6a226e3adf646"}
+  ]},
+  {areal:"Kraličák – Stříbrnice", odkaz:"https://www.holidayinfo.cz/cs/camera/kralicak", kamery:[
+    {label:"Kamera 1", url:"https://www.holidayinfo.cz/hol3_data.php?type=camthumb&camid=2144&w=240&h=135"},
+    {label:"Kamera 2", url:"https://www.holidayinfo.cz/hol3_data.php?type=camthumb&camid=2158&w=240&h=135"}
+  ]},
+  {areal:"Kunčice", odkaz:"https://skikuncice.cz/webkamery", kamery:[
+    {label:"Vlek", url:"https://kamery.skikuncice.cz/cameras/camera_proxy.php?cam=vlek_ds&mode=snapshot&arg=0"}
+  ]},
+  {areal:"Dolní Morava", odkaz:"https://www.dolnimorava.cz/web-kamery", kamery:[
+    {label:"Sněžník / Stezka v oblacích", url:"https://kamery.services.dolnimorava.cz/kamery/vez.jpg"},
+    {label:"Slamník", url:"https://kamery.services.dolnimorava.cz/kamery/slamnik.jpg"},
+    {label:"Dětský park", url:"https://kamery.services.dolnimorava.cz/kamery/detskypark.jpg"}
+  ]}
+];
+function webkameryHtml(){
+  var h='<div class="section-title">Webkamery</div>';
+  WEBKAMERY.forEach(function(a){
+    h+='<div class="wx-cam-areal"><span>'+esc(a.areal)+'</span>'+
+       '<a class="wx-cam-src" href="'+esc(a.odkaz)+'" target="_blank" rel="noopener">otevřít ↗</a></div>';
+    if(!a.kamery.length){
+      h+='<a class="card wx-cam-link" href="'+esc(a.odkaz)+'" target="_blank" rel="noopener">'+
+         'Kamery na webu areálu ↗</a>';
+      return;
+    }
+    a.kamery.forEach(function(k){
+      h+='<a class="card wx-cam" href="'+esc(a.odkaz)+'" target="_blank" rel="noopener" title="'+esc(a.areal+' – '+k.label)+'">'+
+         '<img class="wx-cam-img" data-cam="'+esc(k.url)+'" alt="'+esc(a.areal+' – '+k.label)+'" loading="lazy">'+
+         '<span class="wx-cam-cap">'+esc(k.label)+'</span></a>';
+    });
+  });
+  return h;
+}
+function refreshCams(){
+  var t=Date.now();
+  document.querySelectorAll('.wx-cam-img').forEach(function(img){
+    if(img.dataset.bound!=="1"){
+      img.dataset.bound="1";
+      img.addEventListener("error", function(){ img.closest(".wx-cam").classList.add("wx-cam-err"); });
+      img.addEventListener("load", function(){ img.closest(".wx-cam").classList.remove("wx-cam-err"); });
+    }
+    var base=img.getAttribute("data-cam");
+    img.src=base+(base.indexOf("?")>=0?"&":"?")+"_="+t;
+  });
+}
+// obnova snímků kamer každou minutu, jen když je záložka Počasí viditelná
+setInterval(function(){
+  var p=document.getElementById("panel-pocasi");
+  if(p && !p.hidden && p.querySelector(".wx-cam-img")) refreshCams();
+}, 60000);
 
 var initial=(location.hash||"").slice(1);
 showTab(["rozuctovani","okalA","okalB","pivo","vecere","pocasi"].indexOf(initial)>=0 ? initial : "rozuctovani");
@@ -918,4 +975,20 @@ loadPocasi();
   .wx-drange{font-size:15px;white-space:nowrap;}
   .wx-drange b{color:var(--ink);font-weight:700;}
   .wx-drange em{color:var(--muted);font-style:normal;font-weight:500;}
+  /* ===== Webkamery ===== */
+  .wx-cam-areal{display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+    margin:14px 2px 2px;font-family:var(--display);font-weight:700;font-size:14px;color:var(--accent);}
+  .wx-cam-src{font-family:var(--body);font-weight:600;font-size:12px;color:var(--accent);text-decoration:none;}
+  .wx-cam-src:active{opacity:.6;}
+  .wx-cam{display:block;position:relative;overflow:hidden;padding:0;text-decoration:none;
+    color:inherit;aspect-ratio:16/9;background:var(--surface-2);}
+  .wx-cam-img{width:100%;height:100%;object-fit:cover;display:block;
+    background:var(--surface-2);}
+  .wx-cam-cap{position:absolute;left:0;right:0;bottom:0;padding:6px 10px;font-size:12.5px;
+    font-weight:600;color:#fff;background:linear-gradient(0deg,rgba(10,18,30,.68),transparent);}
+  .wx-cam-err .wx-cam-img{visibility:hidden;}
+  .wx-cam-err::after{content:"Kamera nedostupná";position:absolute;inset:0;display:flex;
+    align-items:center;justify-content:center;color:var(--faint);font-size:13px;}
+  .wx-cam-link{display:flex;align-items:center;justify-content:center;padding:16px;
+    text-decoration:none;color:var(--accent);font-weight:600;font-size:14px;}
 </style>
