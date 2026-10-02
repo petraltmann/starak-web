@@ -263,6 +263,7 @@ var SHEET_ID = "1MoQwpQzF-Ir_6Ov-eKknX068iA_JhhzTgCdobXJc4rs";
 var POLOPENZE_DOSPELY = 670, POLOPENZE_DITE = 570, VYCHOZI_PIVO = 3600;
 var IBAN = "CZ9130300000003440689044"; // účet pro QR Platbu (3440689044/3030)
 var platbyPolopenze = true, platbyPivo = true; // flagy ze záložky Konstanty
+var casSnidane = "", casVecere = ""; // časy stravování ze záložky Konstanty
 var CAP = {A:3,B:5,C:2,D:4,E:3,F:5,G:4,H:3};
 var KAP_OKAL = 29;
 var OKALY = ["A","B"];
@@ -435,10 +436,14 @@ function applyKonstanty(resp){
   for(var i=0;i<rows.length;i++){
     var c=rows[i].c||[];
     var label=c[0]&&c[0].v!=null?String(c[0].v).trim().toLowerCase():"";
+    var labelA=label.normalize("NFD").replace(/[̀-ͯ]/g,""); // bez diakritiky
     var v=c[1]?c[1].v:null;
+    var disp=c[1]?(c[1].f!=null?String(c[1].f):(c[1].v!=null?String(c[1].v):"")).trim():""; // zobrazená hodnota (čas)
     var b=(v===true)||(typeof v==="string"&&v.trim().toUpperCase()==="TRUE")||v===1||v==="1";
-    if(label==="platby") platbyPolopenze=b;
-    else if(label==="platby pivo") platbyPivo=b;
+    if(labelA==="platby") platbyPolopenze=b;
+    else if(labelA==="platby pivo") platbyPivo=b;
+    else if(labelA==="snidane") casSnidane=disp;
+    else if(labelA==="vecere") casVecere=disp;
   }
 }
 function loadKonstanty(cb){
@@ -624,6 +629,14 @@ function renderVecere(){
   var lidi=guests.filter(function(g){return g.vecere;})
     .sort(function(a,b){return (a.okal+a.pokoj+a.jmeno).localeCompare(b.okal+b.pokoj+b.jmeno,"cs");});
   var det=lidi.reduce(function(s,g){return s+g.deti;},0);
+
+  if(casSnidane || casVecere){
+    var mt=document.createElement("div"); mt.className="card sum";
+    mt.innerHTML='<h2>Časy stravování</h2>'+
+      (casSnidane?kv("Snídaně", casSnidane):"")+
+      (casVecere?kv("Večeře", casVecere):"");
+    el.appendChild(mt);
+  }
 
   var head=document.createElement("div"); head.className="card sum";
   head.innerHTML='<h2>První večeře</h2>'+
