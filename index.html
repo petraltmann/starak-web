@@ -441,8 +441,8 @@ function applyKonstanty(resp){
     var flagCell=(c[3]&&c[3].v!=null)?c[3]:c[1];
     var fv=flagCell?flagCell.v:null;
     var b=(fv===true)||(typeof fv==="string"&&fv.trim().toUpperCase()==="TRUE")||fv===1||fv==="1";
-    // čas: první neprázdná zobrazená hodnota z B/C/D (odolné vůči typování sloupce v gvizu)
-    var cas=kDisp(c[1])||kDisp(c[2])||kDisp(c[3]);
+    // čas: první neprázdná zobrazená hodnota z B nebo C (ne D – tam jsou flagy)
+    var cas=kDisp(c[1])||kDisp(c[2]);
     if(labelA==="platby") platbyPolopenze=b;
     else if(labelA==="platby pivo") platbyPivo=b;
     else if(labelA==="snidane") casSnidane=cas;
