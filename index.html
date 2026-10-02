@@ -642,26 +642,27 @@ function renderVecere(){
     el.appendChild(mt);
   }
 
+  var ttl=document.createElement("div"); ttl.className="section-title"; ttl.textContent="Kdo má první večeři";
+  el.appendChild(ttl);
+  if(!lidi.length){
+    var none=document.createElement("div"); none.className="note"; none.textContent="Nikdo nemá první večeři.";
+    el.appendChild(none);
+  } else {
+    lidi.forEach(function(g){
+      var deti=g.deti>0?(" · "+pluralDeti(g.deti)):"";
+      var c=document.createElement("div"); c.className="card pay row";
+      c.innerHTML='<div><div class="nm">'+esc(g.jmeno)+'</div>'+
+        '<div class="sub">Okál '+esc(g.okal)+' · pokoj '+esc(g.pokoj)+deti+'</div></div>';
+      el.appendChild(c);
+    });
+  }
+
   var head=document.createElement("div"); head.className="card sum";
   head.innerHTML='<h2>První večeře</h2>'+
     kv("Dospělí", lidi.length)+kv("Děti (3–10 let)", det)+
     '<hr class="hr">'+
     '<div class="total"><span class="k">Celkem porcí</span><span class="v tnum">'+(lidi.length+det)+'</span></div>';
   el.appendChild(head);
-
-  var ttl=document.createElement("div"); ttl.className="section-title"; ttl.textContent="Kdo má první večeři";
-  el.appendChild(ttl);
-  if(!lidi.length){
-    var none=document.createElement("div"); none.className="note"; none.textContent="Nikdo nemá první večeři.";
-    el.appendChild(none); return;
-  }
-  lidi.forEach(function(g){
-    var deti=g.deti>0?(" · "+pluralDeti(g.deti)):"";
-    var c=document.createElement("div"); c.className="card pay row";
-    c.innerHTML='<div><div class="nm">'+esc(g.jmeno)+'</div>'+
-      '<div class="sub">Okál '+esc(g.okal)+' · pokoj '+esc(g.pokoj)+deti+'</div></div>';
-    el.appendChild(c);
-  });
 }
 
 function renderAll(){ renderRozuctovani(); renderOkaly(); renderPivo(); renderVecere(); }
