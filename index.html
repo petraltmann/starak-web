@@ -202,7 +202,6 @@
       <h1>Starák</h1>
       <div class="status" id="status"><span class="dot"></span><span id="statusText">Načítám…</span></div>
     </div>
-    <button class="refresh" id="refreshBtn" title="Načíst znovu">↻</button>
   </div>
   <nav class="tabs" role="tablist" aria-label="Sekce">
     <button class="tab" role="tab" data-tab="rozuctovani" aria-selected="true">
@@ -690,9 +689,13 @@ function showTab(name){
   window.scrollTo(0,0);
 }
 document.querySelectorAll(".tab").forEach(function(t){
-  t.addEventListener("click", function(){ showTab(t.dataset.tab); });
+  t.addEventListener("click", function(){
+    var n=t.dataset.tab;
+    showTab(n);
+    load();                      // načti znovu data při každém přepnutí
+    if(n==="pocasi") loadPocasi();
+  });
 });
-document.getElementById("refreshBtn").addEventListener("click", function(){ load(); loadPocasi(); });
 
 /* ---- QR modal ---- */
 var qrCurrent={am:0,label:""};
