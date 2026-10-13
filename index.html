@@ -688,12 +688,19 @@ function showTab(name){
   try{ if(location.hash.slice(1)!==name) history.replaceState(null,"","#"+name); }catch(e){}
   window.scrollTo(0,0);
 }
+var lastLoad=0; // čas posledního načtení (throttle přepínání)
+function maybeReload(name){
+  var now=Date.now();
+  if(now-lastLoad<10000) return;   // max. jednou za 10 s
+  lastLoad=now;
+  load();
+  if(name==="pocasi") loadPocasi();
+}
 document.querySelectorAll(".tab").forEach(function(t){
   t.addEventListener("click", function(){
     var n=t.dataset.tab;
     showTab(n);
-    load();                      // načti znovu data při každém přepnutí
-    if(n==="pocasi") loadPocasi();
+    maybeReload(n);               // načti znovu (nejvýš jednou za 10 s)
   });
 });
 
@@ -927,6 +934,7 @@ setInterval(function(){
 
 var initial=(location.hash||"").slice(1);
 showTab(["rozuctovani","okalA","okalB","pivo","vecere","pocasi"].indexOf(initial)>=0 ? initial : "rozuctovani");
+lastLoad=Date.now();
 load();
 loadPocasi();
 </script>
