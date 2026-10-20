@@ -248,7 +248,7 @@
     <div class="qr-am" id="qrAm"></div>
     <div class="qr-msg" id="qrMsg"></div>
     <div class="qr-acc" id="qrAcc"></div>
-    <div class="qr-warn">⚠ Pokud vaše banka nemá možnost okamžité platby do Air Bank, plaťte raději v hotovosti.</div>
+    <div class="qr-warn" id="qrWarn">⚠ Pokud vaše banka nemá možnost okamžité platby do Air Bank, plaťte raději v hotovosti.</div>
     <button class="qr-save" id="qrSave" type="button">Uložit QR do obrázků</button>
     <div class="qr-hint">Naskenuj v bankovní aplikaci. Na iPhonu lze QR uložit i podržením prstu.</div>
   </div>
@@ -344,11 +344,11 @@ function spd(am, label){
 function ibanPretty(){ return IBAN.replace(/(.{4})/g,"$1 ").trim(); }
 var QR_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M20 14v.01M14 20v.01M20 20v.01M17 17v.01M20 17h.01M17 20h.01"/></svg>';
 var CHECK_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>';
-function payRight(paid, am, label, allowQr){
+function payRight(paid, am, label, allowQr, isPivo){
   var amt='<div class="amt tnum'+(paid?' paid':'')+'">'+kc(am)+'</div>';
   var ctrl = paid
     ? '<span class="paid-mark" title="Zaplaceno" aria-label="Zaplaceno">'+CHECK_SVG+'</span>'
-    : (allowQr ? '<button class="qr-btn" data-am="'+am+'" data-label="'+esc(label)+'" aria-label="QR platba">'+QR_SVG+'</button>' : '');
+    : (allowQr ? '<button class="qr-btn" data-am="'+am+'" data-label="'+esc(label)+'"'+(isPivo?' data-pivo="1"':'')+' aria-label="QR platba">'+QR_SVG+'</button>' : '');
   return '<div class="pay-right">'+amt+ctrl+'</div>';
 }
 
@@ -628,7 +628,7 @@ function renderPivo(){
     var pv=pivoOsoby(g);
     c.innerHTML='<div><div class="nm">'+esc(g.jmeno)+'</div>'+
       '<div class="sub">'+podily(g.konz)+'</div></div>'+
-      payRight(g.zapPivo, pv, g.jmeno+' (pivo)', platbyPivo);
+      payRight(g.zapPivo, pv, g.jmeno+' (pivo)', platbyPivo, true);
     el.appendChild(c);
   });
 }
@@ -713,7 +713,7 @@ document.querySelectorAll(".tab").forEach(function(t){
 
 /* ---- QR modal ---- */
 var qrCurrent={am:0,label:""};
-function openQr(am, label){
+function openQr(am, label, isPivo){
   qrCurrent={am:am,label:label};
   var img=document.getElementById("qrImg"); img.innerHTML="";
   var text=spd(am, label);
@@ -725,6 +725,7 @@ function openQr(am, label){
   document.getElementById("qrAm").textContent=kc(am);
   document.getElementById("qrMsg").textContent=label;
   document.getElementById("qrAcc").textContent=ibanPretty();
+  document.getElementById("qrWarn").style.display = isPivo ? "none" : "";  // ne u plateb za pivo
   document.getElementById("qrModal").hidden=false;
 }
 function closeQr(){ document.getElementById("qrModal").hidden=true; document.getElementById("qrImg").innerHTML=""; }
@@ -755,7 +756,7 @@ async function saveQr(){
 }
 document.addEventListener("click", function(e){
   var btn=e.target.closest ? e.target.closest(".qr-btn") : null;
-  if(btn){ openQr(parseInt(btn.dataset.am,10)||0, btn.dataset.label||""); }
+  if(btn){ openQr(parseInt(btn.dataset.am,10)||0, btn.dataset.label||"", btn.dataset.pivo==="1"); }
 });
 document.getElementById("qrSave").addEventListener("click", saveQr);
 document.getElementById("qrClose").addEventListener("click", closeQr);
