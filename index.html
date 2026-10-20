@@ -180,6 +180,9 @@
     background:var(--primary);color:var(--on-primary);cursor:pointer}
   .qr-save:active{transform:scale(.97)}
   .qr-hint{font-size:12px;color:var(--faint);margin-top:10px}
+  .qr-warn{font-size:12.5px;line-height:1.45;color:var(--warn);background:var(--warn-bg);
+    border:1px solid color-mix(in srgb,var(--warn) 30%, var(--line));border-radius:10px;
+    padding:9px 11px;margin-top:12px;text-align:left}
 
   .note{font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line);
     border-radius:12px;padding:10px 12px;line-height:1.5}
@@ -245,6 +248,7 @@
     <div class="qr-am" id="qrAm"></div>
     <div class="qr-msg" id="qrMsg"></div>
     <div class="qr-acc" id="qrAcc"></div>
+    <div class="qr-warn">⚠ Pokud vaše banka nemá možnost okamžité platby do Air Bank, plaťte raději v hotovosti.</div>
     <button class="qr-save" id="qrSave" type="button">Uložit QR do obrázků</button>
     <div class="qr-hint">Naskenuj v bankovní aplikaci. Na iPhonu lze QR uložit i podržením prstu.</div>
   </div>
